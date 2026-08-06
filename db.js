@@ -45,6 +45,7 @@ async function init() {
         image_description TEXT,
         ideal_description TEXT,
         report_type TEXT DEFAULT 'basic',
+        share_token TEXT UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -71,6 +72,8 @@ async function init() {
         paid_at TIMESTAMP
       );
     `);
+    // Migration: add share_token column if missing (for existing tables)
+    await client.query(`ALTER TABLE reports ADD COLUMN IF NOT EXISTS share_token TEXT UNIQUE`);
     console.log('  -> Database tables ready (PostgreSQL)');
   } finally {
     client.release();
@@ -209,6 +212,34 @@ async function getReportCount(userId) {
   return parseInt(result.rows[0].count);
 }
 
+// ============ Share Operations ============
+async function setShareToken(reportId, token) {
+  await pool.query(
+    'UPDATE reports SET share_token = $1 WHERE id = $2',
+    [token, reportId]
+  );
+  return getReportById(reportId);
+}
+
+async function revokeShareToken(reportId) {
+  await pool.query(
+    'UPDATE reports SET share_token = NULL WHERE id = $1',
+    [reportId]
+  );
+  return getReportById(reportId);
+}
+
+async function getReportByShareToken(token) {
+  const result = await pool.query('SELECT * FROM reports WHERE share_token = $1', [token]);
+  if (result.rows[0]) {
+    const row = result.rows[0];
+    row.keywords = JSON.parse(row.keywords || '[]');
+    row.report_data = JSON.parse(row.report_data || '{}');
+    return row;
+  }
+  return null;
+}
+
 // ============ Feedback Operations ============
 async function saveFeedback(userId, rating, content) {
   const result = await pool.query(
@@ -288,6 +319,9 @@ module.exports = {
   getReportById,
   getReportsByUserId,
   getReportCount,
+  setShareToken,
+  revokeShareToken,
+  getReportByShareToken,
   saveFeedback,
   getFeedbackById,
   getFeedbackByUserId,

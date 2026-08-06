@@ -578,6 +578,9 @@ function renderReport(report, opts = {}) {
         <div class="block-body"><p class="prose">${r.comparisonAdvice}</p></div>
       </section>` : '';
 
+  // Save report ID for share button
+  container.dataset.reportId = report.id || '';
+
   container.innerHTML = `
     <!-- Header -->
     <div class="rp-header">
@@ -708,6 +711,10 @@ function renderReport(report, opts = {}) {
     <div class="report-actions">
       <button class="btn-action ghost" onclick="navTo('history')">查看历史</button>
       <button class="btn-action ghost" onclick="navTo('home')">重新分析</button>
+      <button class="btn-action share" id="btn-share" onclick="handleShare()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        分享报告
+      </button>
     </div>
   `;
 }
@@ -975,6 +982,116 @@ function setRating(val) {
   });
 }
 
+// ===== Share =====
+async function handleShare() {
+  const reportContent = document.getElementById('report-content');
+  const reportId = reportContent?.dataset?.reportId;
+  if (!reportId) {
+    toast('无法获取报告 ID');
+    return;
+  }
+  document.getElementById('share-modal').classList.add('show');
+  const linkInput = document.getElementById('share-link-input');
+  const revokeBtn = document.getElementById('btn-revoke-share');
+  linkInput.value = '正在生成分享链接...';
+  revokeBtn.style.display = 'none';
+
+  try {
+    const data = await api(`/api/report/${reportId}/share`, { method: 'POST' });
+    linkInput.value = data.url;
+    state.currentShareToken = data.token;
+    state.currentShareReportId = reportId;
+    revokeBtn.style.display = 'inline-flex';
+  } catch (err) {
+    linkInput.value = '';
+    toast('生成分享链接失败: ' + err.message);
+  }
+}
+
+function closeShare() {
+  document.getElementById('share-modal').classList.remove('show');
+}
+
+async function copyShareLink() {
+  const input = document.getElementById('share-link-input');
+  const url = input.value;
+  if (!url || url.startsWith('正在')) return;
+  try {
+    await navigator.clipboard.writeText(url);
+    toast('链接已复制到剪贴板！');
+  } catch {
+    input.select();
+    document.execCommand('copy');
+    toast('链接已复制！');
+  }
+}
+
+async function revokeShare() {
+  if (!state.currentShareReportId) return;
+  try {
+    await api(`/api/report/${state.currentShareReportId}/share`, { method: 'DELETE' });
+    toast('已取消分享，链接已失效');
+    closeShare();
+  } catch (err) {
+    toast('取消失败: ' + err.message);
+  }
+}
+
+// ===== Shared Report View (public, no auth) =====
+async function loadSharedReport(token) {
+  try {
+    const res = await fetch(`/api/shared/${token}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '加载失败');
+
+    // Show a shared-report banner + render report
+    const app = document.getElementById('app');
+    document.getElementById('login-screen').classList.remove('active');
+    app.classList.add('active');
+
+    // Hide topbar nav (shared view is read-only)
+    document.querySelector('.topbar-nav').style.display = 'none';
+    document.querySelector('.topbar-right').style.display = 'none';
+
+    const reportScreen = document.getElementById('report-screen');
+    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+    reportScreen.classList.add('active');
+
+    const photoDataUrl = data.report.photo || null;
+    const photoMeta = (data.report.photoWidth && data.report.photoHeight)
+      ? { width: data.report.photoWidth, height: data.report.photoHeight } : null;
+
+    renderReport(data.report, { photo: photoDataUrl, photoMeta });
+
+    // Prepend a share banner
+    const container = document.getElementById('report-content');
+    const banner = document.createElement('div');
+    banner.className = 'share-banner';
+    banner.innerHTML = `
+      <div class="share-banner-inner">
+        <img src="/img/logo.png" alt="光绽" class="share-banner-logo">
+        <div class="share-banner-text">
+          <p>这是一份来自 <strong>光绽 GlowSelf</strong> 的分享报告</p>
+        </div>
+        <button class="btn-action primary" onclick="window.location.href='/'">我也要分析</button>
+      </div>
+    `;
+    container.prepend(banner);
+
+    // Remove share button from actions (shared view can't share again)
+    const shareBtn = document.getElementById('btn-share');
+    if (shareBtn) shareBtn.style.display = 'none';
+  } catch (err) {
+    document.body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:linear-gradient(135deg,#F8F6F3 0%,#F5DDE0 100%);font-family:'Noto Sans SC',sans-serif">
+        <img src="/img/logo.png" alt="光绽" style="width:120px;margin-bottom:24px">
+        <h2 style="color:#3D3537;margin-bottom:8px">分享链接无效</h2>
+        <p style="color:#8B8B8B;margin-bottom:24px">${err.message}</p>
+        <a href="/" style="padding:10px 28px;background:#D4A574;color:#fff;border-radius:25px;text-decoration:none;font-size:14px">前往光绽</a>
+      </div>`;
+  }
+}
+
 // ===== Utility =====
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -1014,6 +1131,13 @@ async function init() {
       createPaymentOrder();
     });
   });
+
+  // Check if this is a shared report URL (/s/:token)
+  const pathMatch = window.location.pathname.match(/^\/s\/([A-Za-z0-9_-]+)/);
+  if (pathMatch) {
+    await loadSharedReport(pathMatch[1]);
+    return; // Skip normal init for shared view
+  }
 
   const authed = await checkAuth();
   if (authed) {

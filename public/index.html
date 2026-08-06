@@ -328,6 +328,28 @@
   </div>
 </div>
 
+<!-- Share Modal -->
+<div class="share-overlay" id="share-modal">
+  <div class="share-modal">
+    <div class="share-header">
+      <h3>分享报告</h3>
+      <button class="share-close" onclick="closeShare()">&times;</button>
+    </div>
+    <div class="share-body">
+      <p class="share-desc">生成专属分享链接，让朋友也能查看你的光彩报告</p>
+      <div class="share-link-box">
+        <input type="text" id="share-link-input" readonly placeholder="点击下方按钮生成链接">
+        <button class="btn-copy" id="btn-copy-link" onclick="copyShareLink()">复制</button>
+      </div>
+      <div class="share-actions">
+        <button class="btn-action ghost" onclick="closeShare()">关闭</button>
+        <button class="btn-action danger" id="btn-revoke-share" onclick="revokeShare()" style="display:none">取消分享</button>
+      </div>
+      <p class="share-tip">分享后，任何人通过链接均可查看此报告（仅查看，不可编辑）</p>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 

@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const db = require('./db');
@@ -313,6 +314,68 @@ app.get('/api/report/:id', auth, async (req, res) => {
     return res.status(404).json({ error: '报告不存在' });
   }
   res.json({ report });
+});
+
+// ===== Share: generate share link (auth required) =====
+app.post('/api/report/:id/share', auth, async (req, res) => {
+  try {
+    const report = await db.getReportById(req.params.id);
+    if (!report || report.user_id !== req.userId) {
+      return res.status(404).json({ error: '报告不存在' });
+    }
+    // If already has a token, return it
+    if (report.share_token) {
+      return res.json({ token: report.share_token, url: `${BASE_URL}/s/${report.share_token}` });
+    }
+    // Generate a new random token
+    const token = crypto.randomBytes(12).toString('base64url');
+    await db.setShareToken(report.id, token);
+    res.json({ token, url: `${BASE_URL}/s/${token}` });
+  } catch (err) {
+    console.error('[Share] Create error:', err.message);
+    res.status(500).json({ error: '生成分享链接失败: ' + err.message });
+  }
+});
+
+// ===== Share: revoke share link (auth required) =====
+app.delete('/api/report/:id/share', auth, async (req, res) => {
+  try {
+    const report = await db.getReportById(req.params.id);
+    if (!report || report.user_id !== req.userId) {
+      return res.status(404).json({ error: '报告不存在' });
+    }
+    await db.revokeShareToken(report.id);
+    res.json({ success: true, message: '已取消分享' });
+  } catch (err) {
+    res.status(500).json({ error: '取消分享失败: ' + err.message });
+  }
+});
+
+// ===== Share: view shared report (public, no auth) =====
+app.get('/api/shared/:token', async (req, res) => {
+  try {
+    const report = await db.getReportByShareToken(req.params.token);
+    if (!report) {
+      return res.status(404).json({ error: '分享链接无效或已失效' });
+    }
+    // Return report data + photo for rendering (read-only)
+    const reportData = report.report_data || {};
+    res.json({
+      report: {
+        ...reportData,
+        id: report.id,
+        created_at: report.created_at,
+        reportType: report.report_type,
+        photo: report.photo_path,
+        photoWidth: report.photo_width,
+        photoHeight: report.photo_height,
+        photoMime: report.photo_mime,
+      },
+    });
+  } catch (err) {
+    console.error('[Share] View error:', err.message);
+    res.status(500).json({ error: '加载分享报告失败' });
+  }
 });
 
 // ===== Feedback =====
