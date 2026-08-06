@@ -115,7 +115,9 @@ app.get('/api/credits', auth, (req, res) => {
   res.json({ credits, isBeta, packages: payment.PACKAGES, paymentReady: payment.isConfigured() });
 });
 
-// ===== Create Payment Order =====
+// ===== Create Payment Order (static Alipay QR mode, 2026-08-06) =====
+// 不再调用微信支付 API，直接返回静态二维码图。
+// 用户扫码支付后通过 /api/payment/notify 提交支付凭证（备注 / 支付宝交易号），管理员人工对账。
 app.post('/api/payment/create', auth, async (req, res) => {
   try {
     const pkgKey = req.body.package || 'basic';
@@ -125,32 +127,39 @@ app.post('/api/payment/create', auth, async (req, res) => {
     const orderNo = payment.generateOrderNo();
     const order = db.createOrder(req.userId, orderNo, pkg.amount);
 
-    if (!payment.isConfigured()) {
-      return res.json({
-        orderId: order.id,
-        orderNo: order.order_no,
-        amount: pkg.label,
-        credits: pkg.credits,
-        packageName: pkg.name,
-        codeUrl: null,
-        message: '支付功能暂未开通，请联系管理员',
-      });
-    }
-
-    const notifyUrl = `${BASE_URL}/api/payment/callback`;
-    const wxResult = await payment.createNativeOrder(orderNo, `光绽 GlowSelf ${pkg.name}`, notifyUrl, pkg.amount);
-
     res.json({
       orderId: order.id,
       orderNo: order.order_no,
       amount: pkg.label,
       credits: pkg.credits,
       packageName: pkg.name,
-      codeUrl: wxResult.code_url,
+      qrImage: pkg.qrImage,        // 静态二维码图
+      staticQr: true,              // 标记为静态模式，前端不再轮询
+      message: '请使用支付宝扫码支付，付款后请填写支付凭证以便开通积分',
     });
   } catch (err) {
     console.error('[Payment] Create order error:', err.message);
     res.status(500).json({ error: '创建支付订单失败: ' + err.message });
+  }
+});
+
+// ===== Submit payment proof (manual reconciliation) =====
+// 用户在支付完成后提交此接口：orderNo + alipayNote（可选，备注/交易号）
+// 数据存入 orders 表的 alipay_note 字段，状态保持 pending_payment，管理员定期处理
+app.post('/api/payment/notify', auth, (req, res) => {
+  try {
+    const { orderNo, alipayNote } = req.body;
+    if (!orderNo) return res.status(400).json({ error: '缺少订单号' });
+
+    const order = db.getOrderByOrderNo(orderNo);
+    if (!order) return res.status(404).json({ error: '订单不存在' });
+    if (order.user_id !== req.userId) return res.status(403).json({ error: '无权操作此订单' });
+
+    db.updateOrderNote(order.id, alipayNote || '');
+    res.json({ success: true, message: '已收到您的支付凭证，我们会在 5-10 分钟内核对并开通积分' });
+  } catch (err) {
+    console.error('[Payment] Notify error:', err.message);
+    res.status(500).json({ error: '提交失败: ' + err.message });
   }
 });
 

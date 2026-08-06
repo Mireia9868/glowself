@@ -75,7 +75,7 @@ async function handleRegister() {
     state.user = data.user;
     localStorage.setItem('glowself_token', data.token);
     showApp();
-    toast('注册成功，送你1次免费体验！');
+    toast('注册成功，请选购套餐开始体验');
   } catch (err) {
     toast(err.message);
   }
@@ -211,11 +211,18 @@ function clearUpload(type) {
 function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
 function handleDragLeave(e) { e.currentTarget.classList.remove('dragover'); }
 
-// ===== Payment =====
-async function openPayment(pkg) {
+// ===== Payment (Static Alipay QR mode, 2026-08-06) =====
+// 不再调用微信支付 API，弹窗直接展示静态支付宝收款码。
+// 用户扫码支付后，可在弹窗内提交支付凭证（可选），后端记录到 orders.alipay_note。
+const PACKAGE_INFO = {
+  basic: { qrImage: '/img/payment/basic.jpg', label: '1.99',  credits: 1,  name: '基础报告·1次' },
+  deep:  { qrImage: '/img/payment/deep.jpg',  label: '9.99',  credits: 5,  name: '深度报告·5次' },
+  vip:   { qrImage: '/img/payment/vip.jpg',   label: '29.90', credits: 15, name: 'VIP报告·15次' },
+};
+
+function openPayment(pkg) {
   document.getElementById('payment-modal').classList.add('show');
-  // If a specific package is requested, select it
-  if (pkg) {
+  if (pkg && PACKAGE_INFO[pkg]) {
     document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('active'));
     const card = document.querySelector(`.pkg-card[data-pkg="${pkg}"]`);
     if (card) {
@@ -224,23 +231,30 @@ async function openPayment(pkg) {
       state.selectedPackage = pkg;
     }
   }
-  await createPaymentOrder();
+  // 重置提交按钮 + 输入框
+  const btn = document.getElementById('btn-confirm-paid');
+  if (btn) { btn.classList.remove('success'); btn.disabled = false; btn.textContent = '我已支付，提交凭证'; }
+  const noteInput = document.getElementById('payment-note');
+  if (noteInput) noteInput.value = '';
+  updatePaymentUI();
+  createPaymentOrder();
+}
+
+function updatePaymentUI() {
+  const info = PACKAGE_INFO[state.selectedPackage] || PACKAGE_INFO.basic;
+  const img = document.getElementById('qr-image');
+  if (img) img.src = info.qrImage;
+  const amt = document.getElementById('payment-amount');
+  if (amt) amt.innerHTML = `请支付 <strong>¥${info.label}</strong>，获得 ${info.credits} 次积分`;
 }
 
 async function createPaymentOrder() {
   const pkg = state.selectedPackage || 'basic';
-  document.getElementById('qrcode-area').innerHTML = '<div class="payment-loading"><div class="spinner"></div><p>正在生成支付二维码...</p></div>';
   try {
     const data = await api('/api/payment/create', { method: 'POST', body: JSON.stringify({ package: pkg }) });
     state.currentOrderNo = data.orderNo;
-    if (data.codeUrl) {
-      renderQRCode(data.codeUrl);
-      startPolling(data.orderNo);
-    } else {
-      document.getElementById('qrcode-area').innerHTML = `<div class="payment-pending"><p>支付功能正在开通中</p><p class="sub">${data.message || ''}</p><p class="sub">套餐：${data.packageName} · ¥${data.amount} · ${data.credits}次积分</p></div>`;
-    }
   } catch (err) {
-    document.getElementById('qrcode-area').innerHTML = '<div class="payment-error"><p>' + err.message + '</p></div>';
+    toast('创建订单失败: ' + err.message);
   }
 }
 
@@ -249,41 +263,29 @@ function closePayment() {
   if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
 }
 
-function renderQRCode(codeUrl) {
-  const canvas = document.createElement('canvas');
-  const area = document.getElementById('qrcode-area');
-  area.innerHTML = '';
-  area.appendChild(canvas);
-  if (typeof QRCode !== 'undefined') {
-    QRCode.toCanvas(canvas, codeUrl, { width: 200, margin: 1 }, function(err) {
-      if (err) {
-        area.innerHTML = '<p>二维码生成失败，请刷新重试</p>';
-      }
-    });
-  } else {
-    area.innerHTML = '<p style="font-size:14px;color:var(--text-mid);">请使用微信扫码支付<br><code style="word-break:break-all;font-size:11px;">' + codeUrl + '</code></p>';
+async function confirmPaid() {
+  if (!state.currentOrderNo) {
+    toast('订单未生成，请重试');
+    return;
   }
-}
-
-function startPolling(orderNo) {
-  if (state.pollTimer) clearInterval(state.pollTimer);
-  state.pollTimer = setInterval(async () => {
-    try {
-      const data = await api('/api/payment/status/' + orderNo);
-      if (data.paid) {
-        clearInterval(state.pollTimer);
-        state.pollTimer = null;
-        state.credits = data.credits;
-        updateCreditsUI();
-        closePayment();
-        toast('支付成功！积分已到账');
-        setTimeout(() => startAnalysis(), 500);
-      }
-    } catch {}
-  }, 2000);
-  setTimeout(() => {
-    if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
-  }, 300000);
+  const btn = document.getElementById('btn-confirm-paid');
+  const noteInput = document.getElementById('payment-note');
+  const alipayNote = (noteInput?.value || '').trim();
+  btn.disabled = true;
+  btn.textContent = '提交中...';
+  try {
+    await api('/api/payment/notify', {
+      method: 'POST',
+      body: JSON.stringify({ orderNo: state.currentOrderNo, alipayNote }),
+    });
+    btn.classList.add('success');
+    btn.textContent = '已提交，等待核对';
+    toast('已收到支付凭证！我们会在 5-10 分钟内核对开通');
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '我已支付，提交凭证';
+    toast('提交失败: ' + err.message);
+  }
 }
 
 // ===== Analysis =====
@@ -1000,14 +1002,16 @@ async function init() {
     });
   });
 
-  // Payment package selector
+  // Payment package selector — switch QR image and create new order
   document.querySelectorAll('.pkg-card').forEach(card => {
     card.addEventListener('click', () => {
       document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
       card.querySelector('input').checked = true;
       state.selectedPackage = card.dataset.pkg;
-      createPaymentOrder(); // regenerate order for new package
+      // 切换静态二维码 + 重置订单 + 重置确认表单
+      updatePaymentUI();
+      createPaymentOrder();
     });
   });
 

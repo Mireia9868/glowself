@@ -279,7 +279,7 @@
 <div class="payment-overlay" id="payment-modal">
   <div class="payment-modal">
     <div class="payment-header">
-      <h3>选择充值套餐</h3>
+      <h3>充值积分</h3>
       <button class="payment-close" onclick="closePayment()">&times;</button>
     </div>
     <div class="payment-body">
@@ -298,7 +298,7 @@
             <span class="pkg-name">深度报告 · 5次</span>
             <span class="pkg-desc">护肤+妆容+发型+色彩</span>
           </div>
-          <span class="pkg-price">¥9.90</span>
+          <span class="pkg-price">¥9.99</span>
         </label>
         <label class="pkg-card" data-pkg="vip">
           <input type="radio" name="payment-pkg" value="vip">
@@ -309,14 +309,21 @@
           <span class="pkg-price">¥29.90</span>
         </label>
       </div>
+
       <div class="payment-qrcode" id="qrcode-area">
-        <div class="payment-loading">
-          <div class="spinner"></div>
-          <p>选择套餐后自动生成二维码...</p>
-        </div>
+        <img src="/img/payment/basic.jpg" alt="支付宝收款码" class="qr-image" id="qr-image">
       </div>
-      <p class="payment-tip">请使用微信扫描二维码完成支付</p>
-      <p class="payment-note">支付功能需商户号开通后生效</p>
+
+      <p class="payment-amount" id="payment-amount">请支付 <strong>¥1.99</strong>，获得 1 次积分</p>
+      <p class="payment-tip">请使用 <strong>支付宝</strong> 扫描二维码完成支付</p>
+
+      <div class="payment-confirm">
+        <p class="payment-confirm-hint">付款完成后，请提交支付凭证（可选）</p>
+        <input type="text" id="payment-note" placeholder="支付宝交易号 / 备注信息" maxlength="100" class="payment-note-input">
+        <button class="btn-confirm-paid" id="btn-confirm-paid" onclick="confirmPaid()">我已支付，提交凭证</button>
+      </div>
+
+      <p class="payment-footer-note">核对完成后 5-10 分钟内开通积分<br>如有疑问可联系客服微信 <strong style="color:var(--champagne-dark)">GlowSelf_Admin</strong></p>
     </div>
   </div>
 </div>
@@ -324,7 +331,6 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

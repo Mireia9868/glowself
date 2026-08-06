@@ -80,6 +80,7 @@ const MIGRATIONS = [
   "ALTER TABLE reports ADD COLUMN photo_height INTEGER",
   "ALTER TABLE users ADD COLUMN is_beta INTEGER DEFAULT 0",
   "ALTER TABLE reports ADD COLUMN report_type TEXT DEFAULT 'basic'",
+  "ALTER TABLE orders ADD COLUMN alipay_note TEXT",
 ];
 for (const sql of MIGRATIONS) {
   try { db.exec(sql); } catch (_) { /* column already exists */ }
@@ -223,6 +224,12 @@ function updateOrderStatus(orderNo, status, transactionId) {
   return getOrderByOrderNo(orderNo);
 }
 
+// Update the buyer's payment note (Alipay transaction ID / memo)
+function updateOrderNote(orderId, note) {
+  db.prepare('UPDATE orders SET alipay_note = ? WHERE id = ?').run(note || '', orderId);
+  return getOrderById(orderId);
+}
+
 module.exports = {
   db,
   createUser,
@@ -244,4 +251,5 @@ module.exports = {
   getOrderById,
   getOrderByOrderNo,
   updateOrderStatus,
+  updateOrderNote,
 };

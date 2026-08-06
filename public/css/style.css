@@ -368,10 +368,30 @@ img{max-width:100%;display:block}
 .pkg-price{font-size:18px;font-weight:700;color:var(--champagne-dark);font-family:var(--serif)}
 .payment-qrcode{display:flex;align-items:center;justify-content:center;min-height:180px;margin-bottom:16px}
 .payment-qrcode canvas{border-radius:12px;border:1px solid var(--bg-cream)}
+.payment-qrcode .qr-image{width:100%;max-width:300px;height:auto;border-radius:12px;
+  border:1px solid var(--bg-cream);box-shadow:0 4px 16px rgba(212,165,116,.08)}
+.payment-amount{color:var(--text-dark);font-size:15px;margin-bottom:4px;font-weight:600}
+.payment-amount strong{color:var(--champagne-dark);font-size:18px;font-family:var(--serif);margin:0 4px}
 .payment-loading{display:flex;flex-direction:column;align-items:center;gap:16px;color:var(--text-light)}
 .payment-loading .spinner{width:36px;height:36px;border:3px solid var(--bg-cream);
   border-top-color:var(--champagne);border-radius:50%;animation:spin 1s linear infinite}
-.payment-tip{color:var(--text-mid);font-size:13px;margin-bottom:4px}
+.payment-tip{color:var(--text-mid);font-size:13px;margin-bottom:14px}
+.payment-tip strong{color:var(--text-dark);font-weight:600}
+.payment-confirm{margin:0 -4px 14px;padding:16px 14px;background:var(--bg-cream);
+  border-radius:var(--radius-sm);text-align:left}
+.payment-confirm-hint{font-size:12px;color:var(--text-mid);margin-bottom:10px;text-align:center}
+.payment-note-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+  font-size:13px;background:#fff;margin-bottom:10px;box-sizing:border-box;outline:none;
+  transition:border-color .2s}
+.payment-note-input:focus{border-color:var(--champagne)}
+.payment-note-input::placeholder{color:var(--text-light)}
+.btn-confirm-paid{width:100%;padding:11px 16px;background:linear-gradient(135deg,var(--champagne) 0%,var(--champagne-dark) 100%);
+  color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;
+  transition:transform .15s,box-shadow .15s;font-family:inherit}
+.btn-confirm-paid:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(212,165,116,.3)}
+.btn-confirm-paid:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-confirm-paid.success{background:linear-gradient(135deg,#9CB89C 0%,#7BA67B 100%)}
+.payment-footer-note{color:var(--text-light);font-size:11px;line-height:1.6;margin-top:4px}
 .payment-note{color:var(--text-light);font-size:11px}
 .payment-pending,.payment-error{padding:40px 20px;text-align:center;color:var(--text-mid);font-size:14px}
 .payment-pending .sub{color:var(--text-light);font-size:12px;margin-top:8px}
