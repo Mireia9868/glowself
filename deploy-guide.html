@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光绽 GlowSelf · 部署与支付配置指南</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#FAFAF8;color:#333;line-height:1.8;padding:40px 20px}
+.container{max-width:800px;margin:0 auto}
+h1{font-size:28px;color:#C99B6B;margin-bottom:8px}
+h2{font-size:22px;color:#2D2D2D;margin:32px 0 12px;padding-bottom:8px;border-bottom:2px solid #E8D5B8}
+h3{font-size:17px;color:#5A5A5A;margin:20px 0 8px}
+p{margin:8px 0;color:#555}
+code{background:#F5F0E8;padding:2px 6px;border-radius:4px;font-size:13px;color:#A67C4A}
+pre{background:#2D2D2D;color:#E8D5B8;padding:16px;border-radius:8px;overflow-x:auto;margin:12px 0;font-size:13px}
+pre code{background:none;color:inherit;padding:0}
+.step{background:#fff;border:1px solid #EDE8E1;border-radius:12px;padding:20px;margin:16px 0}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#C99B6B;color:#fff;border-radius:50%;font-weight:700;font-size:14px;margin-right:8px}
+.warn{background:#FFF8F0;border-left:4px solid #C99B6B;padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0}
+.warn strong{color:#A67C4A}
+.ok{background:#F0FFF4;border-left:4px solid #4CAF50;padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0}
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.badge-done{background:#E8F5E9;color:#2E7D32}
+.badge-pending{background:#FFF3E0;color:#E65100}
+.badge-info{background:#E3F2FD;color:#1565C0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{border:1px solid #EDE8E1;padding:8px 12px;text-align:left;font-size:14px}
+th{background:#F5F0E8;color:#5A5A5A}
+.toc{background:#F5F0E8;border-radius:12px;padding:20px;margin:24px 0}
+.toc a{color:#C99B6B;text-decoration:none}
+.toc a:hover{text-decoration:underline}
+.toc ul{list-style:none;padding-left:0}
+.toc li{padding:4px 0}
+.toc li:before{content:"→ ";color:#C99B6B}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>⚡ 光绽 GlowSelf · 部署与支付配置指南</h1>
+<p>本指南分两部分：先上线，再接支付。按顺序操作即可。</p>
+
+<div class="toc">
+<strong>目录</strong>
+<ul>
+<li><a href="#deploy">第一部分：Render.com 公网部署</a></li>
+<li><a href="#payment">第二部分：微信支付商户号申请</a></li>
+<li><a href="#config">第三部分：密钥配置与上线</a></li>
+<li><a href="#checklist">上线检查清单</a></li>
+</ul>
+</div>
+
+<!-- ===================== Part 1: Deployment ===================== -->
+<h2 id="deploy">第一部分：Render.com 公网部署</h2>
+
+<div class="warn"><strong>为什么选 Render？</strong>支持完整 Node.js 运行时，免费层包含 750 小时/月、自动 HTTPS、自动部署。比纯静态托管更适合我们的全栈应用。</div>
+
+<div class="step">
+<span class="step-num">1</span><strong>注册 GitHub 账号</strong>（已有跳过）
+<p>访问 <a href="https://github.com" target="_blank">github.com</a> 注册，然后将项目目录推送到 GitHub 仓库。</p>
+<pre><code>cd /Users/mireia/WorkBuddy/2026-08-06-13-40-56
+git init
+git add .
+git commit -m "GlowSelf - 颜值打分网站"
+git remote add origin https://github.com/你的用户名/glowself.git
+git push -u origin main</code></pre>
+<p><strong>注意：</strong>确保 <code>.gitignore</code> 包含 <code>node_modules/</code>、<code>data/</code>、<code>.env</code></p>
+</div>
+
+<div class="step">
+<span class="step-num">2</span><strong>注册 Render 账号</strong>
+<p>访问 <a href="https://render.com" target="_blank">render.com</a>，点击 "Get Started"，用 GitHub 账号登录。</p>
+</div>
+
+<div class="step">
+<span class="step-num">3</span><strong>创建 Web Service</strong>
+<ul style="margin:8px 0 8px 20px;color:#555">
+<li>Dashboard → <strong>New +</strong> → <strong>Web Service</strong></li>
+<li>选择你推送的 GitHub 仓库 <code>glowself</code></li>
+<li>Render 会自动识别 <code>render.yaml</code> 配置文件</li>
+<li>确认以下设置：
+  <ul style="margin-left:20px">
+  <li>Runtime: <strong>Node</strong></li>
+  <li>Build Command: <code>npm install</code></li>
+  <li>Start Command: <code>node server.js</code></li>
+  <li>Plan: <strong>Free</strong></li>
+  </ul>
+</li>
+</ul>
+</div>
+
+<div class="step">
+<span class="step-num">4</span><strong>配置环境变量</strong>
+<p>在 Render 的 "Environment" 标签页中，逐个添加以下变量：</p>
+<table>
+<tr><th>变量名</th><th>值</th><th>说明</th></tr>
+<tr><td>DEEPSEEK_API_KEY</td><td>sk-08c7e8fbbd984eea856dca01e37aa0b0</td><td>DeepSeek API Key</td></tr>
+<tr><td>DEEPSEEK_BASE_URL</td><td>https://api.deepseek.com/v1</td><td>DeepSeek API 地址</td></tr>
+<tr><td>DEEPSEEK_MODEL</td><td>deepseek-v4-flash</td><td>DeepSeek 模型</td></tr>
+<tr><td>QWEN_API_KEY</td><td>sk-sp-H.DMHLYD.9xm9...</td><td>阿里云百炼 Token Plan Key</td></tr>
+<tr><td>QWEN_BASE_URL</td><td>https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1</td><td>百炼套餐专用地址</td></tr>
+<tr><td>QWEN_MODEL</td><td>qwen3.8-max</td><td>视觉模型</td></tr>
+<tr><td>JWT_SECRET</td><td>（Render 自动生成）</td><td>JWT 密钥</td></tr>
+<tr><td>DB_DIR</td><td>/opt/render/project/src/data</td><td>数据库目录</td></tr>
+<tr><td>BASE_URL</td><td>https://你的应用名.onrender.com</td><td>部署后的 URL</td></tr>
+</table>
+</div>
+
+<div class="step">
+<span class="step-num">5</span><strong>部署</strong>
+<p>点击 <strong>"Create Web Service"</strong>，Render 会自动构建并部署。部署完成后获得公网 URL：<code>https://glowself-xxxx.onrender.com</code></p>
+<div class="ok"><strong>✅ 至此网站已公网可访问！</strong>用户可以注册、上传照片、获取 AI 分析报告。新用户有 1 次免费体验。</div>
+</div>
+
+<div class="warn"><strong>关于免费层限制：</strong>Render 免费层在 15 分钟无请求后会休眠，首次访问需等待 ~30 秒冷启动。如需持续在线，可升级到 Starter 计划（$7/月）。数据库在免费层为临时存储，重新部署会丢失数据。如需持久化，建议升级到付费计划使用 Persistent Disk，或切换为外部数据库（如 Supabase 免费 PostgreSQL）。</div>
+
+<!-- ===================== Part 2: Payment ===================== -->
+<h2 id="payment">第二部分：微信支付商户号申请</h2>
+
+<div class="warn"><strong>前提条件：</strong>微信支付商户号需要<strong>营业执照</strong>（个体工商户或企业均可）。以下为注册指引。</div>
+
+<div class="step">
+<span class="step-num">1</span><strong>注册个体工商户</strong>（已有跳过）
+<ul style="margin:8px 0 8px 20px;color:#555">
+<li>成本低：注册免费，年报简单</li>
+<li>需要材料：身份证、经营场所证明（可用住宅地址）</li>
+<li>办理渠道：当地市场监督管理局 / 线上政务服务平台</li>
+<li>办理时间：通常 1-3 个工作日</li>
+<li>建议经营范围包含：信息技术服务、软件开发、互联网信息服务</li>
+</ul>
+</div>
+
+<div class="step">
+<span class="step-num">2</span><strong>申请微信支付商户号</strong>
+<ul style="margin:8px 0 8px 20px;color:#555">
+<li>访问 <a href="https://pay.weixin.qq.com" target="_blank">pay.weixin.qq.com</a> → 点击"接入微信支付"</li>
+<li>选择主体类型：<strong>个体工商户</strong></li>
+<li>提交材料：营业执照、法人身份证、结算银行卡</li>
+<li>选择支付场景：<strong>Native 支付</strong>（扫码支付，适合网页）</li>
+<li>审核时间：通常 1-5 个工作日</li>
+</ul>
+</div>
+
+<div class="step">
+<span class="step-num">3</span><strong>获取支付凭证</strong>
+<p>商户号审核通过后，在微信支付商户平台获取以下信息：</p>
+<table>
+<tr><th>凭证名称</th><th>环境变量</th><th>获取位置</th></tr>
+<tr><td>商户号</td><td>WXPAY_MCHID</td><td>商户平台首页 → 账户中心</td></tr>
+<tr><td>AppID</td><td>WXPAY_APPID</td><td>需绑定公众号/小程序的 AppID</td></tr>
+<tr><td>商户API证书序列号</td><td>WXPAY_SERIAL_NO</td><td>商户平台 → 账户中心 → API安全</td></tr>
+<tr><td>商户API私钥</td><td>WXPAY_PRIVATE_KEY</td><td>下载API证书，提取 apiclient_key.pem</td></tr>
+<tr><td>APIv3密钥</td><td>WXPAY_API_V3_KEY</td><td>商户平台 → 账户中心 → API安全 → 设置APIv3密钥</td></tr>
+</table>
+</div>
+
+<div class="step">
+<span class="step-num">4</span><strong>配置支付回调地址</strong>
+<p>在微信支付商户平台设置 API 安全 → 添加回调地址：</p>
+<pre><code>https://你的应用名.onrender.com/api/payment/callback</code></pre>
+<p>同时在 Render 环境变量中设置 <code>WXPAY_NOTIFY_URL</code> 为上述地址。</p>
+</div>
+
+<!-- ===================== Part 3: Config ===================== -->
+<h2 id="config">第三部分：密钥配置与上线</h2>
+
+<div class="step">
+<span class="step-num">1</span><strong>在 Render 中添加支付密钥</strong>
+<p>Render Dashboard → 你的 Web Service → Environment，添加：</p>
+<pre><code>WXPAY_MCHID=你的商户号
+WXPAY_APPID=你的AppID
+WXPAY_SERIAL_NO=证书序列号
+WXPAY_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----
+你的商户私钥内容（多行）
+-----END PRIVATE KEY-----
+WXPAY_API_V3_KEY=你的APIv3密钥
+WXPAY_NOTIFY_URL=https://你的应用名.onrender.com/api/payment/callback</code></pre>
+</div>
+
+<div class="step">
+<span class="step-num">2</span><strong>重新部署</strong>
+<p>修改任何环境变量后，Render 会自动触发重新部署。也可以手动触发：Dashboard → Manual Deploy → Deploy latest commit。</p>
+</div>
+
+<div class="step">
+<span class="step-num">3</span><strong>验证支付</strong>
+<p>部署完成后，访问 <code>/api/health</code> 检查 <code>paymentConfigured</code> 是否为 <code>true</code>。</p>
+<pre><code>curl https://你的应用名.onrender.com/api/health
+{"status":"ok","paymentConfigured":true}</code></pre>
+<p>然后用测试账号体验完整流程：注册 → 用完免费次数 → 扫码支付 1.99 元 → 获得新次数 → 继续分析。</p>
+</div>
+
+<!-- ===================== Checklist ===================== -->
+<h2 id="checklist">上线检查清单</h2>
+<table>
+<tr><th>项目</th><th>状态</th><th>说明</th></tr>
+<tr><td>代码已推送到 GitHub</td><td><span class="badge badge-pending">待执行</span></td><td>git push</td></tr>
+<tr><td>Render 部署成功</td><td><span class="badge badge-pending">待执行</span></td><td>公网 URL 可访问</td></tr>
+<tr><td>AI 分析功能正常</td><td><span class="badge badge-done">已验证</span></td><td>DeepSeek + Qwen3.8-max</td></tr>
+<tr><td>视觉 API 可用</td><td><span class="badge badge-done">已验证</span></td><td>图片识别功能正常</td></tr>
+<tr><td>积分系统</td><td><span class="badge badge-done">已实现</span></td><td>新用户 1 次免费</td></tr>
+<tr><td>支付接口代码</td><td><span class="badge badge-done">已实现</span></td><td>微信支付 Native 完整流程</td></tr>
+<tr><td>营业执照</td><td><span class="badge badge-pending">待办理</span></td><td>个体工商户注册</td></tr>
+<tr><td>微信支付商户号</td><td><span class="badge badge-pending">待申请</span></td><td>需营业执照</td></tr>
+<tr><td>支付密钥配置</td><td><span class="badge badge-pending">待配置</span></td><td>商户号通过后</td></tr>
+</table>
+
+<div class="ok" style="margin-top:24px">
+<strong>💡 提示：</strong>
+<ul style="margin:8px 0 0 20px">
+<li><strong>先上线，后接支付：</strong>网站现在就可以部署上线，积分系统已内置（新用户 1 次免费体验），支付功能待商户号开通后填入密钥即自动激活</li>
+<li><strong>代码已全部就绪：</strong>支付模块（payment.js）、积分检查、支付弹窗、二维码渲染、回调处理全部实现完毕，无需再改代码</li>
+<li><strong>定价灵活调整：</strong>如需修改价格，只需改 <code>payment.js</code> 中的 <code>PRICE_PER_USE = 199</code>（单位：分）和 <code>PRICE_LABEL = '1.99'</code></li>
+</ul>
+</div>
+
+</div>
+</body>
+</html>

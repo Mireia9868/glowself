@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光绽 GlowSelf · 发现你的闪耀之美</title>
+<link rel="icon" type="image/png" href="/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen" class="screen active">
+  <div class="login-left">
+    <div class="login-brand">
+      <img src="/img/logo.png" alt="光绽 GlowSelf" class="logo-brand-img">
+      <p class="tagline">每个人都是闪闪发亮的珍宝<br>我们一起让自我发出更加闪亮的光</p>
+      <div class="login-features">
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>AI 驱动的专业风格分析</div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>客观温暖，拒绝容貌焦虑</div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>持续记录你的成长轨迹</div>
+      </div>
+    </div>
+    <div class="login-pearls"><div class="pearl-dots"><span></span><span></span><span></span><span></span><span></span></div></div>
+  </div>
+  <div class="login-right">
+    <div class="login-tabs">
+      <div class="login-tab active" data-tab="login" onclick="switchTab('login')">登 录</div>
+      <div class="login-tab" data-tab="register" onclick="switchTab('register')">注 册</div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form" class="login-form">
+      <h2>欢迎回来</h2>
+      <p class="subtitle">登录你的光绽账户，继续探索之旅</p>
+      <div class="form-group">
+        <label>邮箱或手机号</label>
+        <input type="text" id="login-input" placeholder="your@email.com 或 13800138000">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="login-password" placeholder="请输入密码">
+      </div>
+      <button class="btn-primary" onclick="handleLogin()">登 录</button>
+      <p class="login-alt">还没有账户？<a href="javascript:void(0)" onclick="switchTab('register')">立即注册</a></p>
+    </div>
+
+    <!-- Register Form -->
+    <div id="register-form" class="login-form" style="display:none">
+      <h2>创建账户</h2>
+      <p class="subtitle">加入光绽，发现你的闪耀之美</p>
+      <div class="form-group">
+        <label>昵称</label>
+        <input type="text" id="reg-name" placeholder="给自己起个名字">
+      </div>
+      <div class="form-group">
+        <label>邮箱</label>
+        <input type="email" id="reg-email" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label>手机号</label>
+        <input type="tel" id="reg-phone" placeholder="13800138000">
+        <p class="hint">邮箱和手机号至少填写一个</p>
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="reg-password" placeholder="设置密码（至少6位）">
+      </div>
+      <button class="btn-primary" onclick="handleRegister()">注 册</button>
+      <p class="login-alt">已有账户？<a href="javascript:void(0)" onclick="switchTab('login')">返回登录</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <nav class="topbar">
+    <div class="logo">
+      <img src="/img/logo.png" alt="光绽 GlowSelf" class="logo-img">
+      <div class="logo-text"><span class="logo-zh">光绽</span><small>GlowSelf</small></div>
+    </div>
+    <div class="topbar-nav">
+      <a class="active" data-screen="home" onclick="navTo('home')">光彩分析</a>
+      <a data-screen="history" onclick="navTo('history')">历史报告</a>
+      <a data-screen="feedback" onclick="navTo('feedback')">意见反馈</a>
+    </div>
+    <div class="topbar-right">
+      <div id="credits-display"></div>
+      <div class="user-chip" onclick="toast('个人中心开发中')">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <span id="user-name">用户</span>
+      </div>
+      <button class="btn-logout" onclick="handleLogout()">退出</button>
+    </div>
+  </nav>
+
+  <!-- ===== HOME / UPLOAD ===== -->
+  <div id="home-screen" class="app-screen active">
+    <div class="hero">
+      <h2>发现你的闪耀之美</h2>
+      <p>上传一张清晰的面部照片，填写基本信息，AI 将为你生成专业的<span class="highlight">光彩分析报告</span>。<br>我们关注的是你的独特气质与成长可能，而非简单的分数评判。</p>
+    </div>
+
+    <div class="upload-grid">
+      <div class="upload-card">
+        <div class="upload-card-title">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#D4A574" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          上传你的照片
+        </div>
+        <p class="upload-card-desc">请上传正面、光线充足的面部清晰照片</p>
+        <div class="dropzone" id="dz-photo" onclick="triggerUpload('photo')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'photo')">
+          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p class="dropzone-text">点击或拖拽上传照片</p>
+          <p class="dropzone-hint">支持 JPG / PNG，建议正面清晰照</p>
+          <img class="dropzone-preview" id="preview-photo" alt="">
+          <button class="dropzone-clear" id="clear-photo" onclick="event.stopPropagation();clearUpload('photo')">&times;</button>
+        </div>
+        <input type="file" id="input-photo" accept="image/*" style="display:none" onchange="handleFileSelect(event,'photo')">
+      </div>
+
+      <div class="upload-card optional">
+        <div class="upload-card-title">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#8B8B8B" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          上传理想形象（可选）
+        </div>
+        <p class="upload-card-desc">上传你欣赏的风格或理想形象，获取对比调整建议</p>
+        <div class="dropzone" id="dz-ideal" onclick="triggerUpload('ideal')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'ideal')">
+          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6L7.9 14 2 9.4h7.6z"/></svg>
+          <p class="dropzone-text">上传理想形象照片</p>
+          <p class="dropzone-hint">可参考明星、博主等你欣赏的风格</p>
+          <img class="dropzone-preview" id="preview-ideal" alt="">
+          <button class="dropzone-clear" id="clear-ideal" onclick="event.stopPropagation();clearUpload('ideal')">&times;</button>
+        </div>
+        <input type="file" id="input-ideal" accept="image/*" style="display:none" onchange="handleFileSelect(event,'ideal')">
+      </div>
+    </div>
+
+    <div class="input-section">
+      <h3>基本信息</h3>
+      <div class="input-grid">
+        <div class="input-field">
+          <label>身高 (cm)</label>
+          <input type="number" id="input-height" placeholder="165">
+        </div>
+        <div class="input-field">
+          <label>体重 (kg)</label>
+          <input type="number" id="input-weight" placeholder="52">
+        </div>
+        <div class="input-field">
+          <label>肤质类型</label>
+          <select id="input-skin">
+            <option value="">请选择</option>
+            <option value="dry">干性</option>
+            <option value="oily">油性</option>
+            <option value="combination">混合性</option>
+            <option value="sensitive">敏感性</option>
+            <option value="normal">中性</option>
+          </select>
+        </div>
+        <div class="input-field">
+          <label>期望风格</label>
+          <select id="input-style">
+            <option value="">不限</option>
+            <option value="elegant">优雅知性</option>
+            <option value="fresh">清新自然</option>
+            <option value="chic">时尚前卫</option>
+            <option value="classic">经典复古</option>
+            <option value="casual">休闲舒适</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-type-section">
+      <h3>选择报告类型</h3>
+      <div class="report-type-grid">
+        <label class="report-type-card active" data-type="basic">
+          <input type="radio" name="report-type" value="basic" checked>
+          <div class="rt-header">
+            <span class="rt-name">基础报告</span>
+            <span class="rt-price">¥1.99</span>
+          </div>
+          <p class="rt-desc">13维度专业分析 · 评分 · 建议</p>
+          <span class="rt-cost">消耗 1 次积分</span>
+        </label>
+        <label class="report-type-card" data-type="deep">
+          <input type="radio" name="report-type" value="deep">
+          <div class="rt-header">
+            <span class="rt-name">深度报告</span>
+            <span class="rt-price">¥9.90</span>
+          </div>
+          <p class="rt-desc">基础全部内容 + 护肤方案 · 妆容教程 · 发型建议 · 色彩诊断</p>
+          <span class="rt-cost">消耗 5 次积分</span>
+        </label>
+        <label class="report-type-card" data-type="vip">
+          <input type="radio" name="report-type" value="vip">
+          <div class="rt-header">
+            <span class="rt-name">VIP报告</span>
+            <span class="rt-price">¥29.90</span>
+          </div>
+          <p class="rt-desc">深度全部内容 + 定制购物清单 · 顾问咨询建议</p>
+          <span class="rt-cost">消耗 15 次积分</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="analyze-section">
+      <button class="btn-analyze" id="btn-analyze" onclick="startAnalysis()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z"/><path d="M5 16l.75 2.25L8 19l-2.25.75L5 22l-.75-2.25L2 19l2.25-.75z"/></svg>
+        开始光彩分析
+      </button>
+      <p class="analyze-note" id="analyze-note">分析过程约需 10-30 秒，请耐心等待</p>
+    </div>
+  </div>
+
+  <!-- ===== REPORT SCREEN ===== -->
+  <div id="report-screen" class="app-screen">
+    <div id="report-content"></div>
+  </div>
+
+  <!-- ===== HISTORY SCREEN ===== -->
+  <div id="history-screen" class="app-screen">
+    <div class="history-header">
+      <div>
+        <h2>历史报告</h2>
+        <p class="subtitle">持续记录，看见自己的成长轨迹</p>
+      </div>
+    </div>
+    <div id="history-content"></div>
+  </div>
+
+  <!-- ===== FEEDBACK SCREEN ===== -->
+  <div id="feedback-screen" class="app-screen">
+    <div class="feedback-header">
+      <h2>意见反馈</h2>
+      <p>你的声音对我们至关重要，帮助我们为你提供更好的体验</p>
+    </div>
+    <div class="feedback-form">
+      <h3>告诉我们你的想法</h3>
+      <p class="subtitle">无论是建议、疑问还是鼓励，我们都认真倾听</p>
+      <div class="form-group">
+        <label>整体评分</label>
+        <div class="rating-row" id="rating-row">
+          <svg class="star active" data-val="1" viewBox="0 0 24 24" fill="currentColor" onclick="setRating(1)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6L7.9 14 2 9.4h7.6z"/></svg>
+          <svg class="star active" data-val="2" viewBox="0 0 24 24" fill="currentColor" onclick="setRating(2)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6L7.9 14 2 9.4h7.6z"/></svg>
+          <svg class="star active" data-val="3" viewBox="0 0 24 24" fill="currentColor" onclick="setRating(3)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6L7.9 14 2 9.4h7.6z"/></svg>
+          <svg class="star active" data-val="4" viewBox="0 0 24 24" fill="currentColor" onclick="setRating(4)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6L7.9 14 2 9.4h7.6z"/></svg>
+          <svg class="star" data-val="5" viewBox="0 0 24 24" fill="currentColor" onclick="setRating(5)"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6L7.9 14 2 9.4h7.6z"/></svg>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>反馈内容</label>
+        <textarea id="feedback-text" placeholder="请输入你的建议或想法..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn-action ghost" onclick="document.getElementById('feedback-text').value=''">清空</button>
+        <button class="btn-action primary" onclick="submitFeedback()">提交反馈</button>
+      </div>
+    </div>
+    <div class="feedback-list">
+      <h3>我的反馈记录</h3>
+      <div id="feedback-list-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loading">
+  <img src="/img/logo.png" alt="光绽" class="loading-logo">
+  <div class="loading-text" id="loading-text">正在分析你的光彩特质</div>
+  <div class="loading-sub" id="loading-sub">AI 正在为你生成专属报告...</div>
+  <div class="loading-dots"><span></span><span></span><span></span></div>
+</div>
+
+<!-- Payment Modal -->
+<div class="payment-overlay" id="payment-modal">
+  <div class="payment-modal">
+    <div class="payment-header">
+      <h3>选择充值套餐</h3>
+      <button class="payment-close" onclick="closePayment()">&times;</button>
+    </div>
+    <div class="payment-body">
+      <div class="payment-packages">
+        <label class="pkg-card active" data-pkg="basic">
+          <input type="radio" name="payment-pkg" value="basic" checked>
+          <div class="pkg-info">
+            <span class="pkg-name">基础报告 · 1次</span>
+            <span class="pkg-desc">适合初次体验</span>
+          </div>
+          <span class="pkg-price">¥1.99</span>
+        </label>
+        <label class="pkg-card" data-pkg="deep">
+          <input type="radio" name="payment-pkg" value="deep">
+          <div class="pkg-info">
+            <span class="pkg-name">深度报告 · 5次</span>
+            <span class="pkg-desc">护肤+妆容+发型+色彩</span>
+          </div>
+          <span class="pkg-price">¥9.90</span>
+        </label>
+        <label class="pkg-card" data-pkg="vip">
+          <input type="radio" name="payment-pkg" value="vip">
+          <div class="pkg-info">
+            <span class="pkg-name">VIP报告 · 15次</span>
+            <span class="pkg-desc">深度+购物清单+顾问建议</span>
+          </div>
+          <span class="pkg-price">¥29.90</span>
+        </label>
+      </div>
+      <div class="payment-qrcode" id="qrcode-area">
+        <div class="payment-loading">
+          <div class="spinner"></div>
+          <p>选择套餐后自动生成二维码...</p>
+        </div>
+      </div>
+      <p class="payment-tip">请使用微信扫描二维码完成支付</p>
+      <p class="payment-note">支付功能需商户号开通后生效</p>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
