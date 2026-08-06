@@ -2,7 +2,6 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const path = require('path');
-const fs = require('fs');
 require('dotenv').config();
 
 const db = require('./db');
@@ -14,21 +13,10 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'glowself-dev-secret';
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
-// Ensure data directory exists
-const dataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-
 // ===== Auto-create beta (unlimited) account on startup =====
 const BETA_EMAIL = 'mireia1998@163.com';
 const BETA_PASSWORD = 'qwevhynbvgg666';
 const BETA_NAME = 'mireia1998';
-try {
-  const betaHash = bcrypt.hashSync(BETA_PASSWORD, 10);
-  db.ensureBetaUser(BETA_EMAIL, betaHash, BETA_NAME);
-  console.log(`  → Beta account ready: ${BETA_EMAIL}`);
-} catch (err) {
-  console.error('  → Beta account setup failed:', err.message);
-}
 
 // Middleware
 app.use(express.json({ limit: '15mb' }));
@@ -66,16 +54,16 @@ app.get('/api/vision-status', async (req, res) => {
 });
 
 // ===== Auth: Register =====
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   const { email, phone, password, name } = req.body;
   if (!password || (!email && !phone)) {
     return res.status(400).json({ error: '请提供邮箱或手机号及密码' });
   }
   try {
-    const existing = db.getUserByLogin(email || phone);
+    const existing = await db.getUserByLogin(email || phone);
     if (existing) return res.status(409).json({ error: '该邮箱或手机号已注册' });
     const hash = bcrypt.hashSync(password, 10);
-    const user = db.createUser(email, phone, hash, name);
+    const user = await db.createUser(email, phone, hash, name);
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user });
   } catch (err) {
@@ -84,11 +72,11 @@ app.post('/api/register', (req, res) => {
 });
 
 // ===== Auth: Login =====
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { login, password } = req.body;
   if (!login || !password) return res.status(400).json({ error: '请输入登录凭证' });
   try {
-    const user = db.getUserByLogin(login);
+    const user = await db.getUserByLogin(login);
     if (!user) return res.status(401).json({ error: '用户不存在，请先注册' });
     if (!bcrypt.compareSync(password, user.password_hash)) {
       return res.status(401).json({ error: '密码错误' });
@@ -102,22 +90,20 @@ app.post('/api/login', (req, res) => {
 });
 
 // ===== Auth: Profile =====
-app.get('/api/profile', auth, (req, res) => {
-  const user = db.getUserById(req.userId);
+app.get('/api/profile', auth, async (req, res) => {
+  const user = await db.getUserById(req.userId);
   if (!user) return res.status(404).json({ error: '用户不存在' });
   res.json({ user });
 });
 
 // ===== Credits =====
-app.get('/api/credits', auth, (req, res) => {
-  const credits = db.getCredits(req.userId);
-  const isBeta = db.isBetaUser(req.userId);
+app.get('/api/credits', auth, async (req, res) => {
+  const credits = await db.getCredits(req.userId);
+  const isBeta = await db.isBetaUser(req.userId);
   res.json({ credits, isBeta, packages: payment.PACKAGES, paymentReady: payment.isConfigured() });
 });
 
 // ===== Create Payment Order (static Alipay QR mode, 2026-08-06) =====
-// 不再调用微信支付 API，直接返回静态二维码图。
-// 用户扫码支付后通过 /api/payment/notify 提交支付凭证（备注 / 支付宝交易号），管理员人工对账。
 app.post('/api/payment/create', auth, async (req, res) => {
   try {
     const pkgKey = req.body.package || 'basic';
@@ -125,7 +111,7 @@ app.post('/api/payment/create', auth, async (req, res) => {
     if (!pkg) return res.status(400).json({ error: '无效的套餐类型' });
 
     const orderNo = payment.generateOrderNo();
-    const order = db.createOrder(req.userId, orderNo, pkg.amount);
+    const order = await db.createOrder(req.userId, orderNo, pkg.amount);
 
     res.json({
       orderId: order.id,
@@ -133,8 +119,8 @@ app.post('/api/payment/create', auth, async (req, res) => {
       amount: pkg.label,
       credits: pkg.credits,
       packageName: pkg.name,
-      qrImage: pkg.qrImage,        // 静态二维码图
-      staticQr: true,              // 标记为静态模式，前端不再轮询
+      qrImage: pkg.qrImage,
+      staticQr: true,
       message: '请使用支付宝扫码支付，付款后请填写支付凭证以便开通积分',
     });
   } catch (err) {
@@ -144,18 +130,16 @@ app.post('/api/payment/create', auth, async (req, res) => {
 });
 
 // ===== Submit payment proof (manual reconciliation) =====
-// 用户在支付完成后提交此接口：orderNo + alipayNote（可选，备注/交易号）
-// 数据存入 orders 表的 alipay_note 字段，状态保持 pending_payment，管理员定期处理
-app.post('/api/payment/notify', auth, (req, res) => {
+app.post('/api/payment/notify', auth, async (req, res) => {
   try {
     const { orderNo, alipayNote } = req.body;
     if (!orderNo) return res.status(400).json({ error: '缺少订单号' });
 
-    const order = db.getOrderByOrderNo(orderNo);
+    const order = await db.getOrderByOrderNo(orderNo);
     if (!order) return res.status(404).json({ error: '订单不存在' });
     if (order.user_id !== req.userId) return res.status(403).json({ error: '无权操作此订单' });
 
-    db.updateOrderNote(order.id, alipayNote || '');
+    await db.updateOrderNote(order.id, alipayNote || '');
     res.json({ success: true, message: '已收到您的支付凭证，我们会在 5-10 分钟内核对并开通积分' });
   } catch (err) {
     console.error('[Payment] Notify error:', err.message);
@@ -163,30 +147,27 @@ app.post('/api/payment/notify', auth, (req, res) => {
   }
 });
 
-// ===== Payment Callback (WeChat Pay) =====
+// ===== Payment Callback (WeChat Pay — kept for future switch) =====
 app.post('/api/payment/callback', async (req, res) => {
   try {
     const body = req.body.toString('utf8');
     const data = JSON.parse(body);
     const resource = data.resource;
 
-    // Decrypt callback data
     const decrypted = payment.decryptCallback(resource);
     const { out_trade_no, transaction_id, trade_state } = decrypted;
 
     if (trade_state === 'SUCCESS') {
-      db.updateOrderStatus(out_trade_no, 'paid', transaction_id);
-      const order = db.getOrderByOrderNo(out_trade_no);
+      await db.updateOrderStatus(out_trade_no, 'paid', transaction_id);
+      const order = await db.getOrderByOrderNo(out_trade_no);
       if (order) {
-        // Determine credits from amount: 199→1, 990→5, 2990→15
-        const creditsMap = { 199: 1, 990: 5, 2990: 15 };
+        const creditsMap = { 199: 1, 999: 5, 2990: 15 };
         const creditsToAdd = creditsMap[order.amount] || 1;
-        db.addCredits(order.user_id, creditsToAdd);
+        await db.addCredits(order.user_id, creditsToAdd);
       }
       console.log(`[Payment] Order ${out_trade_no} paid successfully`);
     }
 
-    // Must respond 200 to WeChat Pay
     res.status(200).json({ code: 'SUCCESS', message: 'success' });
   } catch (err) {
     console.error('[Payment] Callback error:', err.message);
@@ -195,12 +176,12 @@ app.post('/api/payment/callback', async (req, res) => {
 });
 
 // ===== Check Order Status =====
-app.get('/api/payment/status/:orderNo', auth, (req, res) => {
-  const order = db.getOrderByOrderNo(req.params.orderNo);
+app.get('/api/payment/status/:orderNo', auth, async (req, res) => {
+  const order = await db.getOrderByOrderNo(req.params.orderNo);
   if (!order) return res.status(404).json({ error: '订单不存在' });
   if (order.user_id !== req.userId) return res.status(403).json({ error: '无权查看此订单' });
 
-  const credits = db.getCredits(req.userId);
+  const credits = await db.getCredits(req.userId);
   res.json({
     status: order.status,
     paid: order.status === 'paid',
@@ -216,13 +197,13 @@ app.post('/api/analyze', auth, async (req, res) => {
 
   const rType = ['basic', 'deep', 'vip'].includes(reportType) ? reportType : 'basic';
   const cost = payment.REPORT_COSTS[rType];
-  const isBeta = db.isBetaUser(req.userId);
+  const isBeta = await db.isBetaUser(req.userId);
 
   // Check credits (beta users bypass)
   if (!isBeta) {
-    const credits = db.getCredits(req.userId);
+    const credits = await db.getCredits(req.userId);
     if (credits < cost) {
-      const pkgKey = rType; // matching package name
+      const pkgKey = rType;
       const pkg = payment.PACKAGES[pkgKey];
       return res.status(402).json({
         error: '积分不足',
@@ -239,7 +220,7 @@ app.post('/api/analyze', auth, async (req, res) => {
   try {
     // Deduct credits (skip for beta)
     if (!isBeta) {
-      db.deductCredit(req.userId, cost);
+      await db.deductCredit(req.userId, cost);
     }
 
     // Step 1: Vision analysis (Qwen-VL)
@@ -247,7 +228,7 @@ app.post('/api/analyze', auth, async (req, res) => {
     const idealDescription = idealPhoto ? await ai.analyzeImage(idealPhoto, 'ideal') : null;
 
     // Step 2: Report generation (DeepSeek)
-    const reportCount = db.getReportCount(req.userId);
+    const reportCount = await db.getReportCount(req.userId);
     const report = await ai.generateReport({
       imageDescription,
       idealDescription,
@@ -262,7 +243,7 @@ app.post('/api/analyze', auth, async (req, res) => {
     // Step 3: Save to database
     const photoMeta = parseDataUrl(photo);
     const idealMeta = idealPhoto ? parseDataUrl(idealPhoto) : null;
-    const saved = db.saveReport(req.userId, {
+    const saved = await db.saveReport(req.userId, {
       height: parseFloat(height),
       weight: parseFloat(weight),
       skinType,
@@ -280,6 +261,7 @@ app.post('/api/analyze', auth, async (req, res) => {
       reportType: rType,
     });
 
+    const remainingCredits = await db.getCredits(req.userId);
     res.json({
       report: {
         ...report,
@@ -291,14 +273,14 @@ app.post('/api/analyze', auth, async (req, res) => {
         photoHeight: photoMeta?.height,
         photoMime: photoMeta?.mime,
       },
-      remainingCredits: db.getCredits(req.userId),
+      remainingCredits,
       isBeta,
     });
   } catch (err) {
     console.error('[Analyze] Error:', err.message);
     // Refund credits on failure (skip for beta)
     if (!isBeta) {
-      db.addCredits(req.userId, cost);
+      await db.addCredits(req.userId, cost);
     }
     res.status(500).json({ error: '分析失败: ' + err.message + '，积分已退回' });
   }
@@ -313,24 +295,20 @@ function parseDataUrl(dataUrl) {
 }
 
 // ===== History =====
-app.get('/api/history', auth, (req, res) => {
-  const reports = db.getReportsByUserId(req.userId);
-  // Strip bulky photo data from list view to keep initial payload small;
-  // the single-report endpoint (/api/report/:id) still returns photo_path for viewing.
+app.get('/api/history', auth, async (req, res) => {
+  const reports = await db.getReportsByUserId(req.userId);
   const summary = reports.map(r => {
     const { photo_path, ideal_photo_path, report_data, ...rest } = r;
     return {
       ...rest,
-      // Cheap thumbnail (e.g. ~40 chars) lets the history row hint at the photo without
-      // inflating the payload; full image loads on click.
       has_photo: Boolean(photo_path),
     };
   });
   res.json({ reports: summary });
 });
 
-app.get('/api/report/:id', auth, (req, res) => {
-  const report = db.getReportById(req.params.id);
+app.get('/api/report/:id', auth, async (req, res) => {
+  const report = await db.getReportById(req.params.id);
   if (!report || report.user_id !== req.userId) {
     return res.status(404).json({ error: '报告不存在' });
   }
@@ -338,15 +316,15 @@ app.get('/api/report/:id', auth, (req, res) => {
 });
 
 // ===== Feedback =====
-app.post('/api/feedback', auth, (req, res) => {
+app.post('/api/feedback', auth, async (req, res) => {
   const { rating, content } = req.body;
   if (!content) return res.status(400).json({ error: '请输入反馈内容' });
-  const feedback = db.saveFeedback(req.userId, rating || 5, content);
+  const feedback = await db.saveFeedback(req.userId, rating || 5, content);
   res.json({ feedback });
 });
 
-app.get('/api/feedback', auth, (req, res) => {
-  const feedback = db.getFeedbackByUserId(req.userId);
+app.get('/api/feedback', auth, async (req, res) => {
+  const feedback = await db.getFeedbackByUserId(req.userId);
   res.json({ feedback });
 });
 
@@ -355,6 +333,28 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`\n  ✨ 光绽 GlowSelf\n  → http://localhost:${PORT}\n  → Payment: ${payment.isConfigured() ? 'Ready' : 'Not configured'}\n`);
-});
+// ===== Async startup: init DB → create beta account → listen =====
+async function startServer() {
+  try {
+    await db.init();
+    console.log('  -> Database initialized');
+  } catch (err) {
+    console.error('  -> Database init failed:', err.message);
+    console.error('  -> Make sure DATABASE_URL is set in .env or Render Environment');
+    process.exit(1);
+  }
+
+  try {
+    const betaHash = bcrypt.hashSync(BETA_PASSWORD, 10);
+    await db.ensureBetaUser(BETA_EMAIL, betaHash, BETA_NAME);
+    console.log(`  -> Beta account ready: ${BETA_EMAIL}`);
+  } catch (err) {
+    console.error('  -> Beta account setup failed:', err.message);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`\n  GlowSelf\n  -> http://localhost:${PORT}\n  -> Payment: ${payment.isConfigured() ? 'Ready' : 'Not configured'}\n  -> DB: PostgreSQL\n`);
+  });
+}
+
+startServer();

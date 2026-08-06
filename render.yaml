@@ -9,6 +9,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 22.22.2
+      - key: DATABASE_URL
+        sync: false
       - key: DEEPSEEK_API_KEY
         sync: false
       - key: DEEPSEEK_BASE_URL
@@ -23,19 +25,5 @@ services:
         value: qwen3.8-max
       - key: JWT_SECRET
         generateValue: true
-      - key: DB_DIR
-        value: /opt/render/project/src/data
       - key: BASE_URL
-        sync: false
-      - key: WXPAY_MCHID
-        sync: false
-      - key: WXPAY_APPID
-        sync: false
-      - key: WXPAY_SERIAL_NO
-        sync: false
-      - key: WXPAY_PRIVATE_KEY
-        sync: false
-      - key: WXPAY_API_V3_KEY
-        sync: false
-      - key: WXPAY_NOTIFY_URL
         sync: false
