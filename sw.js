@@ -1,5 +1,5 @@
 /* GlowSelf service worker — bump CACHE when shipping new JS/CSS */
-const CACHE = 'glow-shell-v4';
+const CACHE = 'glow-shell-v5';
 const SHELL = [
   '/', '/index.html', '/test.html', '/result.html', '/app.html', '/offline.html',
   '/assets/css/site.css',

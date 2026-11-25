@@ -135,6 +135,16 @@ function cleanString(value, max) {
   return String(value == null ? '' : value).replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
 }
 
+function cleanCampaign(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const out = {};
+  ['source', 'medium', 'campaign', 'content', 'term'].forEach(key => {
+    const v = cleanString(value[key], 80);
+    if (v) out[key] = v;
+  });
+  return Object.keys(out).length ? out : null;
+}
+
 function isEmail(value) {
   return /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(String(value || ''));
 }
@@ -195,6 +205,7 @@ async function handleLead(req, res) {
     message: cleanString(body.message, 1000),
     uid: cleanString(body.uid, 64),
     ref: cleanString(body.ref, 64),
+    campaign: cleanCampaign(body.campaign),
     result: body.result && typeof body.result === 'object' ? {
       seasonId: cleanString(body.result.seasonId, 32),
       styleId: cleanString(body.result.styleId, 32),
@@ -228,6 +239,7 @@ async function handleStats(req, res, url) {
   const seasonCounts = {};
   const styleCounts = {};
   const referrers = {};
+  const campaigns = {};
 
   const start = new Date();
   start.setUTCHours(0, 0, 0, 0);
@@ -249,6 +261,11 @@ async function handleStats(req, res, url) {
     if (props.seasonId) seasonCounts[props.seasonId] = (seasonCounts[props.seasonId] || 0) + 1;
     if (props.styleId) styleCounts[props.styleId] = (styleCounts[props.styleId] || 0) + 1;
     if (props.ref) referrers['ref:' + props.ref] = (referrers['ref:' + props.ref] || 0) + 1;
+    const c = props.campaign;
+    if (c && typeof c === 'object' && (c.source || c.campaign)) {
+      const label = (cleanString(c.source, 40) || '未知来源') + (c.campaign ? ' / ' + cleanString(c.campaign, 40) : '');
+      campaigns[label] = (campaigns[label] || 0) + 1;
+    }
     try {
       if (e.referrer) {
         const host = new URL(e.referrer).hostname.replace(/^www\./, '');
@@ -289,6 +306,7 @@ async function handleStats(req, res, url) {
     topSeasons: Object.entries(seasonCounts).sort((a, b) => b[1] - a[1]).slice(0, 8),
     topStyles: Object.entries(styleCounts).sort((a, b) => b[1] - a[1]).slice(0, 8),
     topReferrers: Object.entries(referrers).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    topCampaigns: Object.entries(campaigns).sort((a, b) => b[1] - a[1]).slice(0, 8),
     recentLeads
   });
 }

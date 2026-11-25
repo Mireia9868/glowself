@@ -106,6 +106,7 @@
     ranks(document.getElementById('top-seasons'), data.topSeasons, seasonName);
     ranks(document.getElementById('top-styles'), data.topStyles, styleName);
     ranks(document.getElementById('top-referrers'), data.topReferrers, function (x) { return x.replace('ref:', '邀请 '); });
+    ranks(document.getElementById('top-campaigns'), data.topCampaigns, function (x) { return x; });
 
     var tb = document.getElementById('leads-body');
     var empty = document.getElementById('leads-empty');

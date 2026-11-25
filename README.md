@@ -19,7 +19,8 @@
 | 12 季色彩 SEO 落地页 + 图鉴 | ✅ 完成 |
 | 关于 / 隐私 / 条款 / 404 | ✅ 完成 |
 | 事件 / 线索 API | ✅ 完成（JSONL 落盘） |
-| 运营仪表盘 `/admin.html` | ✅ 完成（密钥门 + 漏斗 / 来源 / 留资） |
+| 运营仪表盘 `/admin.html` | ✅ 完成（密钥门 + 漏斗 / 来源 / 活动归因 / 留资） |
+| 30 天内容增长包 | ✅ `growth/content/`（排期 / 6 篇成稿 / 5 条视频 / 评论 / 预算） |
 | 财务模型 | ✅ `model/GlowSelf-Financial-Model.xlsx` |
 | 增长 / 上线手册 | ✅ `growth/strategy.md`、`growth/launch.md` |
 | 账号体系 / 支付 / 跨设备同步 | ⏳ 内测后接入 |
@@ -83,11 +84,10 @@ glowself/
 ## SEO 内容结构
 
 - 首页：品牌词与核心品类词；
-- 4 篇风格笔记：
-  - `/article/color-season-test.html`
-  - `/article/fangyuan-face-hairstyle.html`
-  - `/article/capsule-wardrobe.html`
-  - `/article/color-analysis-worth-it.html`
+- 文章中心：`/article/index.html`；
+- 4 篇风格笔记：`/article/color-season-test.html`、`/article/fangyuan-face-hairstyle.html`、`/article/capsule-wardrobe.html`、`/article/color-analysis-worth-it.html`；
+- 7 种脸型发型指南：`/article/face-shape-guide.html` + `round-face` / `square-face` / `oval-face` / `long-face` / `heart-face` / `diamond-face`；
+- 5 种身材穿搭指南：`/article/body-shape-guide.html` + `pear-body` / `apple-body` / `hourglass-body` / `rectangle-body` / `inverted-triangle-body`；
 - 12 季落地页：`/season/<season-id>.html`，每页有独立色板、3 套公式、妆容发色、避雷与 FAQ；
 - 12 季图鉴：`/season/index.html`，站内链接入口；
 - 所有页面共用 canonical / OG / JSON-LD，分享页 `/r/...` 动态注入 OG。
@@ -110,9 +110,9 @@ glowself/
 - `ref` 是匿名邀请码，落在事件 `props.ref` 里，用于计算邀请转化。
 
 ### 数据
-- 默认全部在浏览器 localStorage：`glow_result_v2`、`glow_wardrobe_v1`、`glow_plan_v1`、`glow_uid`、`glow_ref`；
+- 默认全部在浏览器 localStorage：`glow_result_v2`、`glow_wardrobe_v1`、`glow_plan_v1`、`glow_uid`、`glow_ref`、`glow_campaign_v1`（UTM 首次触点，30 天）；
 - 不上传人脸照片；v2 不需要登录；
-- 事件匿名（sessionId / uid / path / referrer / IP / UA），用于漏斗分析；
+- 事件匿名（sessionId / uid / path / referrer / campaign / IP / UA），用于漏斗和渠道归因；
 - 线索只收集邮箱 + 意图，用于内测通知。
 
 ## API
@@ -120,8 +120,8 @@ glowself/
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | GET | `/api/health` | 健康检查 + 版本 |
-| POST | `/api/events` | `{name, props, sessionId, path, referrer}` |
-| POST | `/api/leads` | `{email, intent, source, result, message}` |
+| POST | `/api/events` | `{name, props, sessionId, path, referrer}`，`props.campaign` 可选 |
+| POST | `/api/leads` | `{email, intent, source, result, message, campaign}` |
 | GET | `/api/stats?days=7` | 事件/线索聚合，需 `x-admin-key` 请求头 |
 | GET | `/r/:season/:style` | 分享页 + 动态 OG |
 | GET | `/robots.txt` `/sitemap.xml` | SEO |
@@ -143,9 +143,22 @@ LOG_REQUESTS=1
 - 30 天计划可导出 `.ics`，日历每天 08:00（北京时间）提醒，含 15 分钟提前通知。
 - 发布新版本时把 `sw.js` 的 `CACHE` 版本号加一，避免用户拿到旧脚本。
 
+## 内容增长包
+
+首发 30 天的选题、6 篇成稿、5 条短视频脚本、评论回复和 ¥25k 预算在 `growth/content/`：
+
+- `README.md`：UTM 链接和每周 5 个指标
+- `calendar.md`：30 天排期
+- `notes.md`：6 篇小红书成稿
+- `video-scripts.md`：5 条 30–45 秒脚本
+- `comment-playbook.md`：12 个质疑回复
+- `budget.md`：渠道分配、CAC 上限、停止条件
+
+所有链接统一带 `utm_source/medium/campaign/content`；后台「活动归因」按首次触点统计。
+
 ## 运营仪表盘
 
-设置 `ADMIN_KEY` 后打开 `/admin.html`，输入同一密钥。页面为 `noindex`，`robots.txt` 已禁止抓取；密钥放在 `x-admin-key` 请求头，不进入 URL。仪表盘展示漏斗、每日事件、季节/风格分布、来源和最近 30 条脱敏留资。
+设置 `ADMIN_KEY` 后打开 `/admin.html`，输入同一密钥。页面为 `noindex`，`robots.txt` 已禁止抓取；密钥放在 `x-admin-key` 请求头，不进入 URL。仪表盘展示漏斗、每日事件、季节/风格分布、来源、UTM 活动归因和最近 30 条脱敏留资。
 
 ## 部署
 
@@ -191,7 +204,7 @@ npm run check
 4. 接入 Stripe / 支付宝（内测预售 → 正式订阅）；
 5. 账号体系 + 跨设备同步；
 6. 邀请奖励自动化；
-7. 30 篇 SEO 长尾 + 小红书日更；
+7. 按 `growth/content/calendar.md` 发 30 天内容，用 UTM 和留资率决定加投；
 8. 造型师 Pro 服务履约 SOP。
 
 ## 文档

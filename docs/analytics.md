@@ -7,7 +7,7 @@
 ```json
 {
   "name": "quiz_complete",
-  "props": {"seasonId": "cool-winter", "styleId": "elegant", "uid": "u_xxx", "ref": ""},
+  "props": {"seasonId": "cool-winter", "styleId": "elegant", "uid": "u_xxx", "ref": "", "campaign": {"source": "xiaohongshu", "campaign": "note01"}},
   "sessionId": "uuid",
   "path": "/test.html",
   "referrer": "https://www.xiaohongshu.com/...",
@@ -15,7 +15,9 @@
 }
 ```
 
-服务端补充 `ip`、`ua`，写入 `data/events.ndjson`。`POST /api/leads` 也会带 `uid` 和 `ref`，方便把线索归因到邀请人。
+服务端补充 `ip`、`ua`，写入 `data/events.ndjson`。`POST /api/leads` 也会带 `uid`、`ref` 和同一组 `campaign`，方便把线索归因到邀请人和渠道。
+
+UTM 采用**首次触点**：用户第一次带 `utm_source/medium/campaign/content/term` 落地时写入 `localStorage.glow_campaign_v1`，保留 30 天；后续完成测试、分享、留资都会携带同一组 `campaign`。这样内容发出后，能看到「哪一篇笔记带来了完成和留资」，而不只是页面浏览。
 
 ## 关键事件
 
@@ -48,7 +50,7 @@ ADMIN_KEY=glow-local-admin npm start
 
 - 独立会话、事件、测试开始/完成、结果页、留资；
 - 漏斗：页面浏览 → 测试开始 → 测试完成 → 结果页 → 分享/下载 → 邮箱留资；
-- 每日事件柱状图、季节/风格分布、来源域名；
+- 每日事件柱状图、季节/风格分布、来源域名、UTM 活动归因；
 - 最近 30 条脱敏留资（`u***@example.com`）。
 
 密钥放在 `x-admin-key` 请求头，不进入 URL；页面 `noindex`，`robots.txt` 已 Disallow。仪表盘只读，不提供删除或导出，避免误操作。
@@ -73,7 +75,7 @@ jq -r 'select(.name=="quiz_start") | .referrer' data/events.ndjson \
 jq -r 'select(.name=="share_link_copy" or .name=="share_card_download") | .sessionId' data/events.ndjson | sort -u | wc -l
 ```
 
-`/api/stats` 返回 `byName`、`byDay`、`topSeasons`、`topStyles`、`topReferrers`、`recentLeads`。生产环境建议接 PostHog（自托管）或 Umami；JSONL 与仪表盘只作为过渡。
+`/api/stats` 返回 `byName`、`byDay`、`topSeasons`、`topStyles`、`topReferrers`、`topCampaigns`、`recentLeads`。生产环境建议接 PostHog（自托管）或 Umami；JSONL 与仪表盘只作为过渡。
 
 ## 每周看板
 

@@ -8,7 +8,7 @@
 
 ```bash
 node scripts/check.js
-# checked 42 html files, 118 total files
+# checked 42 html files, 124 total files
 # warn /404.html: no og:image
 # warn /app.html: no og:image
 # ok — links, meta, data and assets are consistent
@@ -39,6 +39,8 @@ node scripts/check.js
 | 分享页打开 | 显示「你正在看一份分享报告」横幅，隐藏解锁 CTA，保留「测测我的」 |
 | 结果页邮箱 | POST `/api/leads` 成功，写入 `leads.ndjson`，事件 `report_email_submitted` |
 | 线索归因 | `POST /api/leads` 带 `uid`/`ref`，记录中保留邀请人；测试后已清空测试数据 |
+| UTM 首次触点 | 打开 `?utm_source=xiaohongshu&utm_campaign=note01` 后，`glow_campaign_v1` 写入并保留 30 天；事件和留资均带同一组 `campaign` |
+| 活动归因 | `/api/stats` 返回 `topCampaigns`，仪表盘「活动归因」显示 `xiaohongshu / note01` 等来源；测试后已清空测试数据 |
 | 个人空间 | 今日 look、本周、DNA、衣橱、30 天计划、设置均可切换 |
 | 衣橱添加 | 添加后计数「1 件」，刷新后仍在 localStorage |
 | 30 天计划 | 30 个 `.plan-day`，点击第 1 天写入 `glow_plan_v1`，进度 3% → 第 2 天 |
@@ -96,8 +98,8 @@ node scripts/check.js
 5. JSONL 埋点适合 0–10k DAU；超过后换 Postgres/ClickHouse。
 6. PWA 的 iOS 安装依赖 Safari「分享 → 添加到主屏幕」，没有自动安装横幅；Android/桌面 Chrome 才会出现原生安装事件。
 7. 日历提醒使用 UTC 时间写入，按北京时间 08:00 触发；非中国时区用户看到的是当地对应时间。
-6. 移动端整页截图里固定底栏会压在内容上，这是截图工具对 `position:fixed` 的呈现；真机滚动时底栏固定，内容已留 90px 底部安全区。
-7. 404/app 不设 OG，因为 noindex。
+8. 移动端整页截图里固定底栏会压在内容上，这是截图工具对 `position:fixed` 的呈现；真机滚动时底栏固定，内容已留 90px 底部安全区。
+9. 404/app 不设 OG，因为 noindex。
 
 ## 上线前必须由 owner 提供
 

@@ -10,6 +10,8 @@
   const RESULT_KEY = 'glow_result_v2';
   const UID_KEY = 'glow_uid';
   const REF_KEY = 'glow_ref';
+  const CAMP_KEY = 'glow_campaign_v1';
+  const CAMP_TTL = 30 * 86400 * 1000;
 
   function id() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -35,10 +37,47 @@
     return localStorage.getItem(REF_KEY) || '';
   }
 
+
+  function readCampaign() {
+    try {
+      const c = JSON.parse(localStorage.getItem(CAMP_KEY) || 'null');
+      if (!c || !c.at || Date.now() - c.at > CAMP_TTL) {
+        localStorage.removeItem(CAMP_KEY);
+        return null;
+      }
+      return c;
+    } catch (e) { return null; }
+  }
+
+  function captureCampaign() {
+    const params = new URLSearchParams(location.search);
+    const incoming = {};
+    ['source', 'medium', 'campaign', 'content', 'term'].forEach(function (key) {
+      const value = params.get('utm_' + key);
+      if (value) incoming[key] = value.replace(/[^\w\-./]/g, '').slice(0, 80);
+    });
+    if (!incoming.source && !incoming.campaign) return readCampaign();
+    const existing = readCampaign();
+    if (existing) return existing; // first-touch attribution for 30 days
+    const data = Object.assign(incoming, { at: Date.now(), landing: location.pathname });
+    try { localStorage.setItem(CAMP_KEY, JSON.stringify(data)); } catch (e) {}
+    return data;
+  }
+
+  function campaignProps() {
+    const c = readCampaign();
+    if (!c) return undefined;
+    const out = {};
+    ['source', 'medium', 'campaign', 'content', 'term'].forEach(function (key) {
+      if (c[key]) out[key] = c[key];
+    });
+    return Object.keys(out).length ? out : undefined;
+  }
+
   function track(name, props) {
     const payload = {
       name: name,
-      props: Object.assign({}, props || {}, { uid: uid(), ref: ref() || undefined }),
+      props: Object.assign({}, props || {}, { uid: uid(), ref: ref() || undefined, campaign: campaignProps() }),
       sessionId: sessionId(),
       path: location.pathname + location.search,
       referrer: document.referrer || '',
@@ -113,7 +152,7 @@
   }
 
   function postLead(data) {
-    const payload = Object.assign({}, data, { uid: uid(), ref: ref() || undefined });
+    const payload = Object.assign({}, data, { uid: uid(), ref: ref() || undefined, campaign: campaignProps() });
     return fetch(API.leads, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -252,6 +291,7 @@
   }
 
   function init() {
+    captureCampaign();
     initPWA();
     initNav();
     initBilling();

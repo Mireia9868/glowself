@@ -69,3 +69,9 @@
 **代价**：Service Worker 会带来旧脚本缓存风险，发布时需手动 bump `sw.js` 的 `CACHE`；iOS 安装路径弱于 Android，需要在设置页给 Safari 的图文指引。
 
 **验证**：`Page.getAppManifest` 0 错误、`Page.getInstallabilityErrors` 为空；断网后 `/app.html` 可打开；`.ics` 含 30 个事件，日历 App 可直接导入。
+
+## 2026-11-24 · UTM 用首次触点，不用最后点击
+
+内容发出后，用户可能先看笔记、隔天再搜品牌进来。最后点击会把功劳全给品牌搜索，无法判断哪篇笔记值得加投。因此 `site.js` 在第一次带 UTM 落地时把 `utm_*` 写入 `glow_campaign_v1`，保留 30 天；之后完成测试、留资都带同一组 campaign。代价是同一用户 30 天内换渠道不会重新归因，首月接受这个误差，换取“内容 → 留资”的可读性。
+
+分享链接的 `ref` 独立于 UTM：`ref` 是用户邀请码，UTM 是渠道标记，两者同时存在时分别统计，不做覆盖。
