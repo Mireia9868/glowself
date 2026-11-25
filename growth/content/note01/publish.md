@@ -40,13 +40,13 @@
 
 **配图（按顺序上传 5 张）**
 
-1. `growth/content/covers/note01.png`（封面）
-2. `growth/content/covers/note01-2.png`（黑色分三种）
-3. `growth/content/covers/note01-3.png`（脸下 30cm 测试）
-4. `growth/content/covers/note01-4.png`（冷冬 vs 暖秋）
-5. `growth/content/covers/note01-5.png`（测完拿到什么）
+1. `growth/content/note01/1-cover.png`（封面）
+2. `growth/content/note01/2-three-blacks.png`（黑色分三种）
+3. `growth/content/note01/3-face-test.png`（脸下 30cm 测试）
+4. `growth/content/note01/4-cool-vs-warm.png`（冷冬 vs 暖秋）
+5. `growth/content/note01/5-what-you-get.png`（测完拿到什么）
 
-如果只能发 3 张：封面 + note01-2 + note01-5。
+如果只能发 3 张：1-cover + 2-three-blacks + 5-what-you-get。
 
 ## 发布后 30 分钟
 
