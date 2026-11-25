@@ -14,5 +14,6 @@
 - `face-hub-desktop.png`：7 种脸型索引
 - `body-guide-desktop.png` / `body-guide-mobile.png`：身材穿搭指南
 - `body-hub-desktop.png`：5 种身材索引
+- `admin-gate.png` / `admin-desktop.png` / `admin-mobile.png`：运营仪表盘（演示数据，不是真实用户）
 
 分享卡原图：`assets/img/og-cover.png`（1200×630）；用户结果分享卡由 `result.js` 在浏览器生成 1080×1350 PNG。

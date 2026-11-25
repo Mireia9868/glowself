@@ -8,7 +8,7 @@
 
 ```bash
 node scripts/check.js
-# checked 40 html files, 103 total files
+# checked 41 html files, 109 total files
 # warn /404.html: no og:image
 # warn /app.html: no og:image
 # ok — links, meta, data and assets are consistent
@@ -51,6 +51,8 @@ node scripts/check.js
 | 脸型索引 | `/article/face-shape-guide.html` 7 张卡片，链接均有效 |
 | 5 种身材指南 | 梨形/苹果形/沙漏/H 型/倒三角 5 页可打开，390px 无横向滚动 |
 | 身材索引 | `/article/body-shape-guide.html` 5 张卡片，链接均有效 |
+| 运营仪表盘 | 未登录显示密钥门；正确 `ADMIN_KEY` 后显示 6 个指标、漏斗、每日柱状图、分布与脱敏留资；错误密钥回显错误 |
+| 仪表盘移动端 | 390px 两列指标，表格可横向滚动 |
 | 横向溢出 | 结果页 390px 下 `scrollWidth=390`，无横向滚动 |
 
 ## 截图
@@ -75,6 +77,9 @@ node scripts/check.js
 | `docs/screenshots/body-guide-desktop.png` | 梨形穿搭指南 1440 |
 | `docs/screenshots/body-guide-mobile.png` | 梨形穿搭指南 390 |
 | `docs/screenshots/body-hub-desktop.png` | 5 种身材索引 1440 |
+| `docs/screenshots/admin-gate.png` | 运营仪表盘密钥门 1440 |
+| `docs/screenshots/admin-desktop.png` | 运营仪表盘 1440（演示数据） |
+| `docs/screenshots/admin-mobile.png` | 运营仪表盘 390（演示数据） |
 
 ## 已知边界（不阻塞内测）
 

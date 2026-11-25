@@ -34,10 +34,30 @@
 | `app_view` | 个人空间 | 留存 |
 | `wardrobe_add` / `plan_toggle` / `app_look_save` | 衣橱 / 计划 / 收藏 | 深度使用 |
 
+## 运营仪表盘
+
+启动时设置 `ADMIN_KEY`：
+
+```bash
+ADMIN_KEY=glow-local-admin npm start
+```
+
+打开 `http://127.0.0.1:4173/admin.html`，输入同一个密钥。仪表盘展示：
+
+- 独立会话、事件、测试开始/完成、结果页、留资；
+- 漏斗：页面浏览 → 测试开始 → 测试完成 → 结果页 → 分享/下载 → 邮箱留资；
+- 每日事件柱状图、季节/风格分布、来源域名；
+- 最近 30 条脱敏留资（`u***@example.com`）。
+
+密钥放在 `x-admin-key` 请求头，不进入 URL；页面 `noindex`，`robots.txt` 已 Disallow。仪表盘只读，不提供删除或导出，避免误操作。
+
 ## 漏斗查询（本机）
 
 ```bash
-# 最近 7 天事件量
+# 最近 7 天聚合（推荐走请求头）
+curl -s -H "x-admin-key: $ADMIN_KEY" "http://127.0.0.1:4173/api/stats?days=7" | jq
+
+# 兼容 query key（仅本机调试）
 curl -s "http://127.0.0.1:4173/api/stats?key=$ADMIN_KEY&days=7" | jq
 
 # 测试完成数
@@ -51,7 +71,7 @@ jq -r 'select(.name=="quiz_start") | .referrer' data/events.ndjson \
 jq -r 'select(.name=="share_link_copy" or .name=="share_card_download") | .sessionId' data/events.ndjson | sort -u | wc -l
 ```
 
-生产环境建议接 PostHog（自托管）或 Umami；JSONL 只作为过渡。
+`/api/stats` 返回 `byName`、`byDay`、`topSeasons`、`topStyles`、`topReferrers`、`recentLeads`。生产环境建议接 PostHog（自托管）或 Umami；JSONL 与仪表盘只作为过渡。
 
 ## 每周看板
 

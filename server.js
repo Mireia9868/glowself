@@ -214,7 +214,7 @@ async function handleLead(req, res) {
 }
 
 async function handleStats(req, res, url) {
-  const key = url.searchParams.get('key') || '';
+  const key = req.headers['x-admin-key'] || url.searchParams.get('key') || '';
   if (!ADMIN_KEY || key !== ADMIN_KEY) return sendJson(res, 404, { ok: false });
   const days = Math.min(90, Math.max(1, Number(url.searchParams.get('days') || 7)));
   const since = Date.now() - days * 86400_000;
@@ -222,12 +222,59 @@ async function handleStats(req, res, url) {
   const leads = (await readJsonl(LEADS_FILE)).filter(e => Date.parse(e.ts) >= since);
   const byName = {};
   const sessions = new Set();
+  const byDay = {};
+  const seasonCounts = {};
+  const styleCounts = {};
+  const referrers = {};
+
+  const start = new Date();
+  start.setUTCHours(0, 0, 0, 0);
+  start.setUTCDate(start.getUTCDate() - (days - 1));
+  for (let i = 0; i < days; i++) {
+    const d = new Date(start.getTime() + i * 86400_000).toISOString().slice(0, 10);
+    byDay[d] = { date: d, events: 0, sessions: new Set() };
+  }
+
   for (const e of events) {
     byName[e.name] = (byName[e.name] || 0) + 1;
     if (e.sessionId) sessions.add(e.sessionId);
+    const day = String(e.ts || '').slice(0, 10);
+    if (byDay[day]) {
+      byDay[day].events += 1;
+      if (e.sessionId) byDay[day].sessions.add(e.sessionId);
+    }
+    const props = e.props || {};
+    if (props.seasonId) seasonCounts[props.seasonId] = (seasonCounts[props.seasonId] || 0) + 1;
+    if (props.styleId) styleCounts[props.styleId] = (styleCounts[props.styleId] || 0) + 1;
+    if (props.ref) referrers['ref:' + props.ref] = (referrers['ref:' + props.ref] || 0) + 1;
+    try {
+      if (e.referrer) {
+        const host = new URL(e.referrer).hostname.replace(/^www\./, '');
+        if (host && host !== 'glowself.cn' && host !== 'localhost') referrers[host] = (referrers[host] || 0) + 1;
+      }
+    } catch (_) {}
   }
+
   const byIntent = {};
   for (const l of leads) byIntent[l.intent] = (byIntent[l.intent] || 0) + 1;
+  const maskEmail = (value) => {
+    const email = String(value || '');
+    const at = email.indexOf('@');
+    if (at < 1) return '—';
+    return email.slice(0, 1) + '***' + email.slice(at);
+  };
+  const recentLeads = leads
+    .slice()
+    .sort((a, b) => String(b.ts).localeCompare(String(a.ts)))
+    .slice(0, 30)
+    .map(l => ({
+      ts: l.ts,
+      email: maskEmail(l.email),
+      intent: l.intent || '—',
+      source: l.source || '—',
+      seasonId: (l.result && l.result.seasonId) || '—'
+    }));
+
   sendJson(res, 200, {
     ok: true,
     days,
@@ -235,7 +282,12 @@ async function handleStats(req, res, url) {
     sessions: sessions.size,
     byName,
     leads: leads.length,
-    byIntent
+    byIntent,
+    byDay: Object.values(byDay).map(d => ({ date: d.date, events: d.events, sessions: d.sessions.size })),
+    topSeasons: Object.entries(seasonCounts).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    topStyles: Object.entries(styleCounts).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    topReferrers: Object.entries(referrers).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    recentLeads
   });
 }
 
@@ -332,7 +384,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (p === '/robots.txt') {
       res.writeHead(200, { 'Content-Type': MIME['.txt'], 'Cache-Control': 'public, max-age=3600' });
-      return res.end('User-agent: *\nAllow: /\nDisallow: /app.html\nDisallow: /result.html\nDisallow: /api/\nSitemap: https://glowself.cn/sitemap.xml\n');
+      return res.end('User-agent: *\nAllow: /\nDisallow: /app.html\nDisallow: /admin.html\nDisallow: /result.html\nDisallow: /api/\nSitemap: https://glowself.cn/sitemap.xml\n');
     }
     if (p === '/sitemap.xml') {
       res.writeHead(200, { 'Content-Type': MIME['.xml'], 'Cache-Control': 'public, max-age=3600' });

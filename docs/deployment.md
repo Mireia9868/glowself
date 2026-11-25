@@ -26,6 +26,7 @@ LEADS_WEBHOOK_URL → 飞书 / 企业微信机器人
 4. 环境变量：
    ```
    ADMIN_KEY=<32位随机串>
+   # 部署后打开 https://glowself.cn/admin.html 输入此密钥；页面 noindex，robots 已禁止抓取
    DATA_DIR=/var/data
    LEADS_WEBHOOK_URL=<webhook>
    ```

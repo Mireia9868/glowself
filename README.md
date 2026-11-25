@@ -18,6 +18,7 @@
 | 12 季色彩 SEO 落地页 + 图鉴 | ✅ 完成 |
 | 关于 / 隐私 / 条款 / 404 | ✅ 完成 |
 | 事件 / 线索 API | ✅ 完成（JSONL 落盘） |
+| 运营仪表盘 `/admin.html` | ✅ 完成（密钥门 + 漏斗 / 来源 / 留资） |
 | 财务模型 | ✅ `model/GlowSelf-Financial-Model.xlsx` |
 | 增长 / 上线手册 | ✅ `growth/strategy.md`、`growth/launch.md` |
 | 账号体系 / 支付 / 跨设备同步 | ⏳ 内测后接入 |
@@ -26,8 +27,9 @@
 ## 快速开始
 
 ```bash
-node server.js
+ADMIN_KEY=glow-local-admin node server.js
 # http://127.0.0.1:4173
+# 运营仪表盘：http://127.0.0.1:4173/admin.html
 ```
 
 零依赖，Node >= 20。不要用 `python -m http.server`，否则 `/api/events`、分享 OG、sitemap 都不可用。
@@ -50,6 +52,7 @@ glowself/
 ├── test.html                  11 题测试
 ├── result.html                结果页（动态渲染）
 ├── app.html                   个人空间（今日 / DNA / 衣橱 / 计划 / 设置）
+├── admin.html                 运营仪表盘（noindex，需要 ADMIN_KEY）
 ├── pricing.html               Free / Plus / Pro
 ├── about.html privacy.html terms.html 404.html
 ├── article/                   4 篇文章 + 7 种脸型指南 + 5 种身材指南 + 文章中心
@@ -61,11 +64,12 @@ glowself/
 │   ├── js/test.js             测试交互
 │   ├── js/result.js           结果渲染 + 1080×1350 分享卡
 │   ├── js/app.js              每日 look / 衣橱 / 30 天计划
+│   ├── js/admin.js            仪表盘请求与渲染
 │   └── img/                   logo、favicon、og-cover、12 季 OG
 ├── data/                      events.ndjson / leads.ndjson / seasons.json
 ├── model/                     财务模型 + 生成脚本
 ├── growth/                    增长策略 + 上线手册
-├── scripts/                   build_articles.py / build_pages.py / build_seasons.py / build_og.py / export_seasons.js / check.js
+├── scripts/                   build_articles.py / build_pages.py / build_seasons.py / build_faces.py / build_bodies.py / build_og.py / export_seasons.js / check.js
 ├── docs/                      部署、分析、决策记录
 ├── server.js                  Node HTTP 服务
 ├── package.json
@@ -114,7 +118,7 @@ glowself/
 | GET | `/api/health` | 健康检查 + 版本 |
 | POST | `/api/events` | `{name, props, sessionId, path, referrer}` |
 | POST | `/api/leads` | `{email, intent, source, result, message}` |
-| GET | `/api/stats?key=<ADMIN_KEY>&days=7` | 事件/线索聚合 |
+| GET | `/api/stats?days=7` | 事件/线索聚合，需 `x-admin-key` 请求头 |
 | GET | `/r/:season/:style` | 分享页 + 动态 OG |
 | GET | `/robots.txt` `/sitemap.xml` | SEO |
 
@@ -127,6 +131,10 @@ DATA_DIR=./data
 LEADS_WEBHOOK_URL=<飞书/企微 webhook>
 LOG_REQUESTS=1
 ```
+
+## 运营仪表盘
+
+设置 `ADMIN_KEY` 后打开 `/admin.html`，输入同一密钥。页面为 `noindex`，`robots.txt` 已禁止抓取；密钥放在 `x-admin-key` 请求头，不进入 URL。仪表盘展示漏斗、每日事件、季节/风格分布、来源和最近 30 条脱敏留资。
 
 ## 部署
 
