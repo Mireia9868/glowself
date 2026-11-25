@@ -59,3 +59,8 @@ Render Dashboard → 选择服务 → Deploys → 找到上一个成功部署 �
 3. 分享结果给一个朋友，确认分享页与 OG；
 4. 发第 1 篇小红书（`growth/content/notes.md` note01 + `growth/content/covers/note01.png`）；
 5. 24 小时后只看两个数：测试开始率、完成率。
+
+
+## Keepalive
+
+`.github/workflows/keepalive.yml` pings `/api/health` every 10 minutes so the Render free instance does not cold-start for the first visitor. GitHub may delay scheduled runs; check Actions after the first hour. If the budget allows, upgrading Render to Starter is more reliable.

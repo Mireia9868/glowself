@@ -220,3 +220,8 @@ npm run check
 - [验收记录](docs/qa.md)
 - [界面截图](docs/screenshots/)
 - [财务模型](model/GlowSelf-Financial-Model.xlsx)
+
+
+## Keepalive
+
+`.github/workflows/keepalive.yml` pings `/api/health` every 10 minutes so the Render free instance does not cold-start for the first visitor. GitHub may delay scheduled runs; check Actions after the first hour. If the budget allows, upgrading Render to Starter is more reliable.
