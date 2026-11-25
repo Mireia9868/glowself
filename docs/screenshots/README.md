@@ -12,5 +12,7 @@
 - `season-index-desktop.png`：12 季色彩图鉴
 - `face-guide-desktop.png` / `face-guide-mobile.png`：脸型发型指南
 - `face-hub-desktop.png`：7 种脸型索引
+- `body-guide-desktop.png` / `body-guide-mobile.png`：身材穿搭指南
+- `body-hub-desktop.png`：5 种身材索引
 
 分享卡原图：`assets/img/og-cover.png`（1200×630）；用户结果分享卡由 `result.js` 在浏览器生成 1080×1350 PNG。

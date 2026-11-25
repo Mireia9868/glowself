@@ -14,7 +14,7 @@
 | 分享页 `/r/:season/:style` + 动态 OG | ✅ 完成 |
 | 个人空间（今日 look / DNA / 衣橱 / 30 天计划 / 设置） | ✅ 完成（本地存储） |
 | 定价页 / 内测申请 | ✅ 完成 |
-| 4 篇 SEO 文章 + 7 种脸型指南 + 文章中心 | ✅ 完成 |
+| 4 篇 SEO 文章 + 7 种脸型指南 + 5 种身材指南 + 文章中心 | ✅ 完成 |
 | 12 季色彩 SEO 落地页 + 图鉴 | ✅ 完成 |
 | 关于 / 隐私 / 条款 / 404 | ✅ 完成 |
 | 事件 / 线索 API | ✅ 完成（JSONL 落盘） |
@@ -39,6 +39,7 @@ npm run check    # 静态检查：链接、meta、数据、资源
 npm run data     # 从 data.js 导出 data/seasons.json
 npm run seasons  # 重新生成 12 季落地页
 npm run faces    # 重新生成 7 种脸型指南
+npm run bodies   # 重新生成 5 种身材指南
 ```
 
 ## 目录
@@ -51,7 +52,7 @@ glowself/
 ├── app.html                   个人空间（今日 / DNA / 衣橱 / 计划 / 设置）
 ├── pricing.html               Free / Plus / Pro
 ├── about.html privacy.html terms.html 404.html
-├── article/                   4 篇文章 + 7 种脸型指南 + 文章中心
+├── article/                   4 篇文章 + 7 种脸型指南 + 5 种身材指南 + 文章中心
 ├── season/                    12 季色彩落地页 + 图鉴（长尾 SEO）
 ├── assets/
 │   ├── css/site.css           编辑风设计系统

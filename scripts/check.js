@@ -90,6 +90,11 @@ for (const slug of ['face-shape-guide', 'round-face', 'square-face', 'oval-face'
   if (!fs.existsSync(path.join(ROOT, 'article', slug + '.html'))) errors.push(`missing face guide /article/${slug}.html`);
 }
 
+// body-shape guides
+for (const slug of ['body-shape-guide', 'pear-body', 'apple-body', 'hourglass-body', 'rectangle-body', 'inverted-triangle-body']) {
+  if (!fs.existsSync(path.join(ROOT, 'article', slug + '.html'))) errors.push(`missing body guide /article/${slug}.html`);
+}
+
 // sitemap paths
 const server = fs.readFileSync(path.join(ROOT, 'server.js'), 'utf8');
 const sitemapMatch = server.match(/const SITEMAP = \[([\s\S]*?)\];/);

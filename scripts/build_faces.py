@@ -34,7 +34,7 @@ FOOTER = """<footer class="footer">
         <p class="footer-note">把「我适合什么」变成一份可执行的说明书。不评分，不排名，不制造焦虑。</p>
       </div>
       <div><div class="footer-title">产品</div><a href="/test.html">色彩 DNA 测试</a><a href="/#report">报告内容</a><a href="/pricing.html">定价</a><a href="/season/index.html">12 季色彩图鉴</a><a href="/app.html">我的空间</a></div>
-      <div><div class="footer-title">风格笔记</div><a href="/article/color-season-test.html">12 季色彩入门</a><a href="/article/fangyuan-face-hairstyle.html">方圆脸发型指南</a><a href="/article/face-shape-guide.html">7 种脸型发型索引</a><a href="/article/capsule-wardrobe.html">胶囊衣橱清单</a><a href="/article/color-analysis-worth-it.html">色彩测试值不值</a></div>
+      <div><div class="footer-title">风格笔记</div><a href="/article/color-season-test.html">12 季色彩入门</a><a href="/article/fangyuan-face-hairstyle.html">方圆脸发型指南</a><a href="/article/face-shape-guide.html">7 种脸型发型索引</a><a href="/article/body-shape-guide.html">5 种身材穿搭索引</a><a href="/article/capsule-wardrobe.html">胶囊衣橱清单</a><a href="/article/color-analysis-worth-it.html">色彩测试值不值</a></div>
       <div><div class="footer-title">关于</div><a href="/about.html">我们为什么做 GlowSelf</a><a href="/privacy.html">隐私政策</a><a href="/terms.html">服务条款</a><a href="mailto:hello@glowself.cn">hello@glowself.cn</a></div>
     </div>
     <div class="footer-bottom"><span>© 2026 GlowSelf 光绽</span><span>中国 · 杭州</span><span>不评分 · 不排名 · 不制造焦虑</span></div>
@@ -301,7 +301,7 @@ def page(slug, f):
         <div class="toc"><b>本文目录</b>{toc_html}</div>
         <div class="side-card dark"><div class="kicker">FREE TEST</div><h3>3 分钟，找到你的本命色。</h3><p>不评分、不排名、不用上传照片。</p><a class="btn btn-paper" href="/test.html">免费测色彩 DNA →</a></div>
         <div class="side-card light"><b>相关脸型</b><p>{related}</p></div>
-        <div class="side-card light"><b>继续读</b><p><a href="/article/fangyuan-face-hairstyle.html">方圆脸发型指南</a><br><a href="/article/face-shape-guide.html">7 种脸型发型索引</a><br><a href="/season/index.html">12 季色彩图鉴</a></p></div>
+        <div class="side-card light"><b>继续读</b><p><a href="/article/fangyuan-face-hairstyle.html">方圆脸发型指南</a><br><a href="/article/face-shape-guide.html">7 种脸型发型索引</a><a href="/article/body-shape-guide.html">5 种身材穿搭索引</a><br><a href="/season/index.html">12 季色彩图鉴</a></p></div>
       </aside>
     </div>
   </div>

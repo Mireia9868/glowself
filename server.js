@@ -52,7 +52,13 @@ const SITEMAP = [
   '/article/oval-face.html',
   '/article/long-face.html',
   '/article/heart-face.html',
-  '/article/diamond-face.html'
+  '/article/diamond-face.html',
+  '/article/body-shape-guide.html',
+  '/article/pear-body.html',
+  '/article/apple-body.html',
+  '/article/hourglass-body.html',
+  '/article/rectangle-body.html',
+  '/article/inverted-triangle-body.html'
 ];
 
 const MIME = {

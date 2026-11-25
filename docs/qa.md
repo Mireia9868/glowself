@@ -8,7 +8,7 @@
 
 ```bash
 node scripts/check.js
-# checked 34 html files, 93 total files
+# checked 40 html files, 103 total files
 # warn /404.html: no og:image
 # warn /app.html: no og:image
 # ok — links, meta, data and assets are consistent
@@ -22,7 +22,7 @@ node scripts/check.js
 |---|---|
 | `/api/health` | 200 `{"status":"ok","version":"v2"}` |
 | `/robots.txt` | 200，禁止抓取 `/app.html`、`/result.html`、`/api/` |
-| `/sitemap.xml` | 200，含首页、测试、定价、关于、隐私、条款、4 篇文章、7 种脸型指南、12 季落地页与图鉴，共 31 个 URL |
+| `/sitemap.xml` | 200，含首页、测试、定价、关于、隐私、条款、4 篇文章、7 种脸型指南、5 种身材指南、12 季落地页与图鉴，共 37 个 URL |
 | `/r/deep-winter/elegant?g=outfit&b=X` | 200，动态 title「我是『深冬 · 温婉优雅』…」 |
 | `/no-such-page` | 404，品牌化 404 页 |
 | `/season/` `/article/` | 301 到各自 `index.html` |
@@ -49,6 +49,8 @@ node scripts/check.js
 | 12 季图鉴 | `/season/index.html` 12 张季节卡，链接到对应落地页 |
 | 7 种脸型指南 | 圆脸/方脸/鹅蛋脸/长脸/心形脸/菱形脸/方圆脸 7 页可打开，390px 无横向滚动 |
 | 脸型索引 | `/article/face-shape-guide.html` 7 张卡片，链接均有效 |
+| 5 种身材指南 | 梨形/苹果形/沙漏/H 型/倒三角 5 页可打开，390px 无横向滚动 |
+| 身材索引 | `/article/body-shape-guide.html` 5 张卡片，链接均有效 |
 | 横向溢出 | 结果页 390px 下 `scrollWidth=390`，无横向滚动 |
 
 ## 截图
@@ -70,6 +72,9 @@ node scripts/check.js
 | `docs/screenshots/face-guide-desktop.png` | 圆脸发型指南 1440 |
 | `docs/screenshots/face-guide-mobile.png` | 圆脸发型指南 390 |
 | `docs/screenshots/face-hub-desktop.png` | 7 种脸型索引 1440 |
+| `docs/screenshots/body-guide-desktop.png` | 梨形穿搭指南 1440 |
+| `docs/screenshots/body-guide-mobile.png` | 梨形穿搭指南 390 |
+| `docs/screenshots/body-hub-desktop.png` | 5 种身材索引 1440 |
 
 ## 已知边界（不阻塞内测）
 

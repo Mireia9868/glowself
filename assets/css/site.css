@@ -885,3 +885,10 @@ body.nav-open .nav-toggle span::after { top: 0; transform: rotate(-45deg); }
   .meta-grid.face-facts .meta-cell { padding: 10px 8px; }
   .meta-grid.face-facts .v { font-size: 11px; }
 }
+
+/* article formulas */
+.formula { display: flex; gap: 14px; padding: 16px 0; border-top: 1px solid var(--line); }
+.formula:last-child { border-bottom: 1px solid var(--line); }
+.formula .num { font-family: var(--serif); font-size: 15px; color: var(--accent); min-width: 24px; }
+.formula b { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: 0; }
+.formula p { margin: 5px 0 0; font-size: 13px; line-height: 1.7; color: var(--muted); }

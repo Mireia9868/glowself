@@ -10,7 +10,8 @@
     "check": "node scripts/check.js",
     "data": "node scripts/export_seasons.js",
     "seasons": "python3 scripts/build_seasons.py",
-    "faces": "python3 scripts/build_faces.py"
+    "faces": "python3 scripts/build_faces.py",
+    "bodies": "python3 scripts/build_bodies.py"
   },
   "engines": {
     "node": ">=20"
