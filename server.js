@@ -255,7 +255,7 @@ async function dbStats(days) {
     dbQuery(`SELECT referrer, count(*)::int AS c FROM glow_events WHERE created_at >= ${dbDaysAgo()} AND referrer <> '' GROUP BY referrer`, range),
     dbQuery(`SELECT coalesce(nullif(props->'campaign'->>'source',''),'未知来源') || CASE WHEN props->'campaign'->>'campaign' IS NOT NULL THEN ' / ' || (props->'campaign'->>'campaign') ELSE '' END AS label, count(*)::int AS c FROM glow_events WHERE created_at >= ${dbDaysAgo()} AND props ? 'campaign' GROUP BY 1`, range),
     dbQuery(`SELECT intent, count(*)::int AS c FROM glow_leads WHERE created_at >= ${dbDaysAgo()} GROUP BY intent`, range),
-    dbQuery(`SELECT created_at, email, intent, source, message, result->>'seasonId' AS season_id FROM glow_leads WHERE created_at >= ${dbDaysAgo()} ORDER BY created_at DESC LIMIT 30`, range)
+    dbQuery(`SELECT created_at, email, intent, source, message, result->>'seasonId' AS season_id, result->>'styleId' AS style_id FROM glow_leads WHERE created_at >= ${dbDaysAgo()} ORDER BY created_at DESC LIMIT 30`, range)
   ]);
 
   const byName = Object.fromEntries(byNameRows.map(r => [r.name, r.c]));
@@ -294,7 +294,8 @@ async function dbStats(days) {
     intent: l.intent || '—',
     source: l.source || '—',
     message: l.message || '',
-    seasonId: l.season_id || '—'
+    seasonId: l.season_id || '—',
+    styleId: l.style_id || '—'
   }));
 
   return {
@@ -451,7 +452,8 @@ async function handleStats(req, res, url) {
       intent: l.intent || '—',
       source: l.source || '—',
       message: l.message || '',
-      seasonId: (l.result && l.result.seasonId) || '—'
+      seasonId: (l.result && l.result.seasonId) || '—',
+      styleId: (l.result && l.result.styleId) || '—'
     }));
 
   sendJson(res, 200, {

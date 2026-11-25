@@ -114,7 +114,7 @@
     var intentLabel = { paid_plus: '首月付款', plus_trial: 'Plus 预约', free_report: '免费报告', result_feedback: '结果反馈', account_email: '邮箱同步', consult: '顾问咨询', notify: '通知' };
     empty.hidden = recent.length > 0;
     tb.innerHTML = recent.map(function (l) {
-      return '<tr><td>' + esc((l.ts || '').replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(l.email) + '</td><td>' + esc(intentLabel[l.intent] || l.intent) + '</td><td>' + esc(l.source) + '</td><td>' + esc(l.message || '—') + '</td><td>' + esc(seasonName(l.seasonId)) + '</td></tr>';
+      return '<tr><td>' + esc((l.ts || '').replace('T', ' ').slice(0, 16)) + '</td><td>' + esc(l.email) + '</td><td>' + esc(intentLabel[l.intent] || l.intent) + '</td><td>' + esc(l.source) + '</td><td>' + esc(l.message || '—') + '</td><td>' + esc(seasonName(l.seasonId)) + '</td><td>' + esc(styleName(l.styleId)) + '</td></tr>';
     }).join('');
 
     document.getElementById('updated').textContent = '更新于 ' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
