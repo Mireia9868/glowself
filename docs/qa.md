@@ -25,6 +25,7 @@ node scripts/check.js
 | `/sitemap.xml` | 200，含首页、测试、定价、关于、隐私、条款、4 篇文章、文章中心、12 季落地页与图鉴 |
 | `/r/deep-winter/elegant?g=outfit&b=X` | 200，动态 title「我是『深冬 · 温婉优雅』…」 |
 | `/no-such-page` | 404，品牌化 404 页 |
+| `/season/` `/article/` | 301 到各自 `index.html` |
 
 ## 浏览器主链路
 

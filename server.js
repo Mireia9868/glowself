@@ -309,6 +309,14 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/events' && req.method === 'POST') return await handleEvent(req, res);
     if (p === '/api/leads' && req.method === 'POST') return await handleLead(req, res);
     if (p === '/api/stats' && req.method === 'GET') return await handleStats(req, res, url);
+    if (p === '/season' || p === '/season/') {
+      res.writeHead(301, { Location: '/season/index.html', 'Cache-Control': 'public, max-age=3600' });
+      return res.end();
+    }
+    if (p === '/article' || p === '/article/') {
+      res.writeHead(301, { Location: '/article/index.html', 'Cache-Control': 'public, max-age=3600' });
+      return res.end();
+    }
     if (p === '/robots.txt') {
       res.writeHead(200, { 'Content-Type': MIME['.txt'], 'Cache-Control': 'public, max-age=3600' });
       return res.end('User-agent: *\nAllow: /\nDisallow: /app.html\nDisallow: /result.html\nDisallow: /api/\nSitemap: https://glowself.cn/sitemap.xml\n');
