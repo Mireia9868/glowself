@@ -8,7 +8,7 @@
 
 ```bash
 node scripts/check.js
-# checked 14 html files, 63 total files
+# checked 27 html files, 81 total files
 # warn /404.html: no og:image
 # warn /app.html: no og:image
 # ok — links, meta, data and assets are consistent
@@ -22,7 +22,7 @@ node scripts/check.js
 |---|---|
 | `/api/health` | 200 `{"status":"ok","version":"v2"}` |
 | `/robots.txt` | 200，禁止抓取 `/app.html`、`/result.html`、`/api/` |
-| `/sitemap.xml` | 200，含首页、测试、定价、关于、隐私、条款、4 篇文章、文章中心 |
+| `/sitemap.xml` | 200，含首页、测试、定价、关于、隐私、条款、4 篇文章、文章中心、12 季落地页与图鉴 |
 | `/r/deep-winter/elegant?g=outfit&b=X` | 200，动态 title「我是『深冬 · 温婉优雅』…」 |
 | `/no-such-page` | 404，品牌化 404 页 |
 
@@ -37,12 +37,15 @@ node scripts/check.js
 | 复制分享链接 | 生成 `/r/<season>/<style>?g=&b=&ref=<uid>` |
 | 分享页打开 | 显示「你正在看一份分享报告」横幅，隐藏解锁 CTA，保留「测测我的」 |
 | 结果页邮箱 | POST `/api/leads` 成功，写入 `leads.ndjson`，事件 `report_email_submitted` |
+| 线索归因 | `POST /api/leads` 带 `uid`/`ref`，记录中保留邀请人；测试后已清空测试数据 |
 | 个人空间 | 今日 look、本周、DNA、衣橱、30 天计划、设置均可切换 |
 | 衣橱添加 | 添加后计数「1 件」，刷新后仍在 localStorage |
 | 30 天计划 | 30 个 `.plan-day`，点击第 1 天写入 `glow_plan_v1`，进度 3% → 第 2 天 |
 | 定价切换 | 月付 ¥0/¥39/¥199，年付 ¥0/¥299/¥1990 |
 | 内测弹窗 | 打开/关闭、邮箱提交、成功态正常 |
-| 移动端导航 | 390px 下汉堡菜单展开，4 个导航项可点，关闭按钮正常 |
+| 移动端导航 | 390px 下汉堡菜单展开，5 个导航项可点，关闭按钮正常 |
+| 12 季落地页 | 12 个 `/season/<id>.html` 均可打开，色板/公式/FAQ 正确，390px 无横向滚动 |
+| 12 季图鉴 | `/season/index.html` 12 张季节卡，链接到对应落地页 |
 | 横向溢出 | 结果页 390px 下 `scrollWidth=390`，无横向滚动 |
 
 ## 截图
@@ -58,6 +61,9 @@ node scripts/check.js
 | `docs/screenshots/app-mobile.png` | 个人空间 390 |
 | `docs/screenshots/pricing-desktop.png` | 定价页 1440 |
 | `docs/screenshots/article-desktop.png` | 文章页 1440 |
+| `docs/screenshots/season-desktop.png` | 冷冬落地页 1440 |
+| `docs/screenshots/season-mobile.png` | 冷冬落地页 390 |
+| `docs/screenshots/season-index-desktop.png` | 12 季图鉴 1440 |
 
 ## 已知边界（不阻塞内测）
 

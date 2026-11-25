@@ -15,7 +15,7 @@
 }
 ```
 
-服务端补充 `ip`、`ua`，写入 `data/events.ndjson`。
+服务端补充 `ip`、`ua`，写入 `data/events.ndjson`。`POST /api/leads` 也会带 `uid` 和 `ref`，方便把线索归因到邀请人。
 
 ## 关键事件
 

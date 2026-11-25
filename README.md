@@ -15,6 +15,7 @@
 | 个人空间（今日 look / DNA / 衣橱 / 30 天计划 / 设置） | ✅ 完成（本地存储） |
 | 定价页 / 内测申请 | ✅ 完成 |
 | 4 篇 SEO 文章 + 文章中心 | ✅ 完成 |
+| 12 季色彩 SEO 落地页 + 图鉴 | ✅ 完成 |
 | 关于 / 隐私 / 条款 / 404 | ✅ 完成 |
 | 事件 / 线索 API | ✅ 完成（JSONL 落盘） |
 | 财务模型 | ✅ `model/GlowSelf-Financial-Model.xlsx` |
@@ -35,6 +36,8 @@ node server.js
 npm start        # 生产启动
 npm run dev      # PORT=4173
 npm run check    # 静态检查：链接、meta、数据、资源
+npm run data     # 从 data.js 导出 data/seasons.json
+npm run seasons  # 重新生成 12 季落地页
 ```
 
 ## 目录
@@ -48,6 +51,7 @@ glowself/
 ├── pricing.html               Free / Plus / Pro
 ├── about.html privacy.html terms.html 404.html
 ├── article/                   4 篇 SEO 文章 + 文章中心
+├── season/                    12 季色彩落地页 + 图鉴（长尾 SEO）
 ├── assets/
 │   ├── css/site.css           编辑风设计系统
 │   ├── js/data.js             12 季 / 6 风格 / 5 身型 / 11 题 / analyze()
@@ -59,12 +63,24 @@ glowself/
 ├── data/                      events.ndjson / leads.ndjson / seasons.json
 ├── model/                     财务模型 + 生成脚本
 ├── growth/                    增长策略 + 上线手册
-├── scripts/                   build_articles.py / build_pages.py / build_og.py / check.js
+├── scripts/                   build_articles.py / build_pages.py / build_seasons.py / build_og.py / export_seasons.js / check.js
 ├── docs/                      部署、分析、决策记录
 ├── server.js                  Node HTTP 服务
 ├── package.json
 └── render.yaml
 ```
+
+## SEO 内容结构
+
+- 首页：品牌词与核心品类词；
+- 4 篇风格笔记：
+  - `/article/color-season-test.html`
+  - `/article/fangyuan-face-hairstyle.html`
+  - `/article/capsule-wardrobe.html`
+  - `/article/color-analysis-worth-it.html`
+- 12 季落地页：`/season/<season-id>.html`，每页有独立色板、3 套公式、妆容发色、避雷与 FAQ；
+- 12 季图鉴：`/season/index.html`，站内链接入口；
+- 所有页面共用 canonical / OG / JSON-LD，分享页 `/r/...` 动态注入 OG。
 
 ## 产品逻辑
 

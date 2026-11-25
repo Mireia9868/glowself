@@ -32,7 +32,20 @@ const SITEMAP = [
   '/article/color-season-test.html',
   '/article/fangyuan-face-hairstyle.html',
   '/article/capsule-wardrobe.html',
-  '/article/color-analysis-worth-it.html'
+  '/article/color-analysis-worth-it.html',
+  '/season/index.html',
+  '/season/soft-autumn.html',
+  '/season/warm-autumn.html',
+  '/season/deep-autumn.html',
+  '/season/light-spring.html',
+  '/season/warm-spring.html',
+  '/season/clear-spring.html',
+  '/season/soft-summer.html',
+  '/season/cool-summer.html',
+  '/season/light-summer.html',
+  '/season/clear-winter.html',
+  '/season/cool-winter.html',
+  '/season/deep-winter.html'
 ];
 
 const MIME = {
@@ -165,6 +178,8 @@ async function handleLead(req, res) {
     email,
     source: cleanString(body.source, 80),
     message: cleanString(body.message, 1000),
+    uid: cleanString(body.uid, 64),
+    ref: cleanString(body.ref, 64),
     result: body.result && typeof body.result === 'object' ? {
       seasonId: cleanString(body.result.seasonId, 32),
       styleId: cleanString(body.result.styleId, 32),

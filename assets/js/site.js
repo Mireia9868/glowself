@@ -113,10 +113,11 @@
   }
 
   function postLead(data) {
+    const payload = Object.assign({}, data, { uid: uid(), ref: ref() || undefined });
     return fetch(API.leads, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify(payload)
     }).then(function (r) {
       if (!r.ok) throw new Error('bad status');
       return r.json();

@@ -5,13 +5,14 @@
 ## 1. 上线前检查（T-3 天）
 
 ### 产品
-- [ ] 手机 390 / 430 宽度检查：首页、测试、结果、App、定价、文章；
+- [ ] 手机 390 / 430 宽度检查：首页、测试、结果、App、定价、文章、12 季落地页；
 - [ ] 完整跑一遍：首页 → 测试 11 题 → 结果 → 下载分享卡 → 复制链接 → 新窗口打开分享页；
 - [ ] 无结果打开 `/app.html` 显示空状态，不报错；
 - [ ] 结果页刷新后仍保留（localStorage `glow_result_v2`）；
 - [ ] 分享页 `/r/cool-winter/elegant` 的 OG 图在微信/小红书预览正常；
 - [ ] 所有表单有成功/失败提示，不出现 501/500；
 - [ ] 404 页面正常，`/robots.txt`、`/sitemap.xml` 不是 SPA 首页；
+- [ ] `/season/index.html` 与 12 个季节页可打开，canonical 正确；
 - [ ] Lighthouse（移动）Performance ≥ 85、Accessibility ≥ 90。
 
 ### 数据

@@ -78,6 +78,13 @@ if (!fs.existsSync(og) || fs.readdirSync(og).filter(f => f.endsWith('.png')).len
   errors.push('assets/img/og: expected 12 season covers');
 }
 
+// season landing pages
+if (G && G.seasons) {
+  for (const id of Object.keys(G.seasons)) {
+    if (!fs.existsSync(path.join(ROOT, 'season', id + '.html'))) errors.push(`missing season page /season/${id}.html`);
+  }
+}
+
 // sitemap paths
 const server = fs.readFileSync(path.join(ROOT, 'server.js'), 'utf8');
 const sitemapMatch = server.match(/const SITEMAP = \[([\s\S]*?)\];/);
