@@ -54,7 +54,7 @@
     }).catch(function () {
       submit.disabled = false;
       submit.textContent = '提交，等待开通';
-      showError('提交没有成功，请稍后再试，或直接发邮件到 hello@glowself.cn。');
+      showError('提交没有成功，请稍后再试，或直接发邮件到 mireia1998@163.com。');
     });
   });
 })();

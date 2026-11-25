@@ -33,7 +33,7 @@ FOOTER = """<footer class="footer">
       </div>
       <div><div class="footer-title">产品</div><a href="/test.html">色彩 DNA 测试</a><a href="/#report">报告内容</a><a href="/pricing.html">定价</a><a href="/season/index.html">12 季色彩图鉴</a><a href="/app.html">我的空间</a></div>
       <div><div class="footer-title">风格笔记</div><a href="/article/color-season-test.html">12 季色彩入门</a><a href="/article/face-shape-guide.html">7 种脸型发型索引</a><a href="/article/body-shape-guide.html">5 种身材穿搭索引</a><a href="/article/fangyuan-face-hairstyle.html">方圆脸发型指南</a><a href="/article/capsule-wardrobe.html">胶囊衣橱清单</a><a href="/article/color-analysis-worth-it.html">色彩测试值不值</a></div>
-      <div><div class="footer-title">关于</div><a href="/about.html">我们为什么做 GlowSelf</a><a href="/privacy.html">隐私政策</a><a href="/terms.html">服务条款</a><a href="mailto:hello@glowself.cn">hello@glowself.cn</a></div>
+      <div><div class="footer-title">关于</div><a href="/about.html">我们为什么做 GlowSelf</a><a href="/privacy.html">隐私政策</a><a href="/terms.html">服务条款</a><a href="mailto:mireia1998@163.com">mireia1998@163.com</a></div>
     </div>
     <div class="footer-bottom"><span>© 2026 GlowSelf 光绽</span><span>中国 · 杭州</span><span>不评分 · 不排名 · 不制造焦虑</span></div>
   </div>
@@ -76,7 +76,7 @@ def doc(slug, title, desc, heading, dek, body, kicker="GLOWSELF"):
       <article class="article-body">{body}</article>
       <aside class="article-side">
         <div class="article-cta"><h3>3 分钟，<br>先认识自己。</h3><p>11 个问题，不用注册，不用上传照片。</p><a class="btn" href="/test.html">免费测色彩 DNA →</a></div>
-        <div class="toc"><div class="k">联系我们</div><a href="mailto:hello@glowself.cn">hello@glowself.cn</a><a href="/pricing.html">查看定价</a><a href="/article/index.html">风格笔记</a></div>
+        <div class="toc"><div class="k">联系我们</div><a href="mailto:mireia1998@163.com">mireia1998@163.com</a><a href="/pricing.html">查看定价</a><a href="/article/index.html">风格笔记</a></div>
       </aside>
     </div>
   </div>
@@ -111,7 +111,7 @@ about = doc(
 <p>GlowSelf 目前是内测版。免费测试已经开放，Plus 订阅在登记阶段，暂不扣费。我们没有融资，也没有投放预算，靠内容和口碑一点点长。</p>
 <p>如果你愿意，花 2 分 30 秒测一次，然后把「哪里不准」告诉我们。你的反馈会直接进入下一版规则。</p>
 
-<div class="callout"><b>联系</b><p>邮箱：hello@glowself.cn<br>合作与媒体：同上，标题注明「合作」。<br>我们会在 2 个工作日内回复。</p></div>
+<div class="callout"><b>联系</b><p>邮箱：mireia1998@163.com<br>合作与媒体：同上，标题注明「合作」。<br>我们会在 2 个工作日内回复。</p></div>
 """,
 )
 
@@ -139,7 +139,7 @@ privacy = doc(
 <p>这些数据用于产品分析和反垃圾，不用于广告画像，也不出售给第三方。</p>
 
 <h2>3. 邮箱</h2>
-<p>只有你主动提交时，我们才收集邮箱。用途仅限：发送你请求的报告、内测名额通知、产品更新。每封邮件都有退订入口。你可以随时发邮件到 hello@glowself.cn 要求删除。</p>
+<p>只有你主动提交时，我们才收集邮箱。用途仅限：发送你请求的报告、内测名额通知、产品更新。每封邮件都有退订入口。你可以随时发邮件到 mireia1998@163.com 要求删除。</p>
 
 <h2>4. 我们不收集什么</h2>
 <ul>
@@ -153,7 +153,7 @@ privacy = doc(
 <p>静态页面和匿名事件存储在我们的云服务商（Render）上，域名与 CDN 由 Cloudflare 提供。邮箱和事件日志保留 24 个月，或直到你要求删除。浏览器里的测试结果由你控制，清除浏览器数据即可删除。</p>
 
 <h2>6. 你的权利</h2>
-<p>你可以要求访问、更正、删除你的邮箱和事件记录，也可以要求我们停止处理。发邮件到 hello@glowself.cn，我们会在 15 个工作日内处理。你不需要说明理由。</p>
+<p>你可以要求访问、更正、删除你的邮箱和事件记录，也可以要求我们停止处理。发邮件到 mireia1998@163.com，我们会在 15 个工作日内处理。你不需要说明理由。</p>
 
 <h2>7. 未成年人</h2>
 <p>GlowSelf 不面向 14 岁以下未成年人。如果你未满 14 岁，请在监护人同意下使用，或不要提交邮箱。</p>
@@ -212,7 +212,7 @@ terms = doc(
 <h2>9. 条款变更与适用法律</h2>
 <p>我们可能更新条款，重大变更会提前 7 天在网站公告。本条款适用中华人民共和国法律。争议优先协商；协商不成的，提交杭州市有管辖权的人民法院。</p>
 
-<div class="callout"><b>有问题？</b><p>发邮件到 hello@glowself.cn，标题写「条款问题」。我们会在 2 个工作日内回复。</p></div>
+<div class="callout"><b>有问题？</b><p>发邮件到 mireia1998@163.com，标题写「条款问题」。我们会在 2 个工作日内回复。</p></div>
 """,
 )
 

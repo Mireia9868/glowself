@@ -108,7 +108,7 @@ node scripts/check.js
 - Cloudflare DNS/缓存权限。
 - 支付商户号（支付宝/微信/Stripe）与主体资质。
 - 小红书/抖音企业号或投放账户。
-- 真实客服邮箱/退订地址（当前 `hello@glowself.cn` 为占位）。
+- 真实客服邮箱/退订地址（当前 `mireia1998@163.com` 为占位）。
 
 
 ## 2026-11-25 付款页

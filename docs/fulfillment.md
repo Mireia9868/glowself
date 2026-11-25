@@ -61,10 +61,10 @@ Hi，
 有任何一页看不懂，直接回这封邮件。
 
 —— GlowSelf
-hello@glowself.cn
+mireia1998@163.com
 ```
 
-附件用生成的 PDF。发件邮箱建议 `hello@glowself.cn`。
+附件用生成的 PDF。发件邮箱建议 `mireia1998@163.com`。
 
 ## 4. 24 小时内没处理完
 
