@@ -1,423 +1,444 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+'use strict';
+
+const http = require('http');
+const fs = require('fs');
+const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
-require('dotenv').config();
 
-const db = require('./db');
-const ai = require('./ai');
-const payment = require('./payment');
+const ROOT = __dirname;
+const PORT = Number(process.env.PORT || 4173);
+const ADMIN_KEY = process.env.ADMIN_KEY || '';
+const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
+const EVENTS_FILE = path.join(DATA_DIR, 'events.ndjson');
+const LEADS_FILE = path.join(DATA_DIR, 'leads.ndjson');
+const LEADS_WEBHOOK = process.env.LEADS_WEBHOOK_URL || '';
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'glowself-dev-secret';
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const SEASONS = require('./data/seasons.json');
 
-// ===== Auto-create beta (unlimited) account on startup =====
-const BETA_EMAIL = 'mireia1998@163.com';
-const BETA_PASSWORD = 'qwevhynbvgg666';
-const BETA_NAME = 'mireia1998';
+const STYLES = {
+  elegant: '温婉优雅', cool: '清冷知性', sweet: '甜酷灵动',
+  natural: '自然松弛', retro: '复古文艺', minimal: '极简现代'
+};
 
-// Middleware
-app.use(express.json({ limit: '15mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+const SITEMAP = [
+  '/',
+  '/test.html',
+  '/pricing.html',
+  '/about.html',
+  '/privacy.html',
+  '/terms.html',
+  '/article/index.html',
+  '/article/color-season-test.html',
+  '/article/fangyuan-face-hairstyle.html',
+  '/article/capsule-wardrobe.html',
+  '/article/color-analysis-worth-it.html',
+  '/season/index.html',
+  '/season/soft-autumn.html',
+  '/season/warm-autumn.html',
+  '/season/deep-autumn.html',
+  '/season/light-spring.html',
+  '/season/warm-spring.html',
+  '/season/clear-spring.html',
+  '/season/soft-summer.html',
+  '/season/cool-summer.html',
+  '/season/light-summer.html',
+  '/season/clear-winter.html',
+  '/season/cool-winter.html',
+  '/season/deep-winter.html',
+  '/article/face-shape-guide.html',
+  '/article/round-face.html',
+  '/article/square-face.html',
+  '/article/oval-face.html',
+  '/article/long-face.html',
+  '/article/heart-face.html',
+  '/article/diamond-face.html',
+  '/article/body-shape-guide.html',
+  '/article/pear-body.html',
+  '/article/apple-body.html',
+  '/article/hourglass-body.html',
+  '/article/rectangle-body.html',
+  '/article/inverted-triangle-body.html'
+];
 
-// CORS for callback (WeChat Pay server will POST)
-app.use('/api/payment/callback', express.raw({ type: 'application/json' }));
+const MIME = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
+  '.ics': 'text/calendar; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+  '.woff2': 'font/woff2'
+};
 
-// Auth middleware
-function auth(req, res, next) {
-  const token = (req.headers.authorization || '').replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: '请先登录' });
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.userId = decoded.userId;
-    next();
-  } catch {
-    return res.status(401).json({ error: '登录已过期，请重新登录' });
+const rateBuckets = new Map();
+function rateLimit(ip, limit, windowMs) {
+  const now = Date.now();
+  const key = ip + ':' + Math.floor(now / windowMs);
+  const count = (rateBuckets.get(key) || 0) + 1;
+  rateBuckets.set(key, count);
+  if (rateBuckets.size > 5000) {
+    for (const [k] of rateBuckets) {
+      if (!k.endsWith(':' + Math.floor(now / windowMs))) rateBuckets.delete(k);
+    }
   }
+  return count <= limit;
 }
 
-// ===== Health =====
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString(), paymentConfigured: payment.isConfigured() });
-});
+function clientIp(req) {
+  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  return forwarded || req.socket.remoteAddress || 'unknown';
+}
 
-// ===== Vision API Status =====
-app.get('/api/vision-status', async (req, res) => {
-  try {
-    const available = await ai.checkVisionAPI();
-    res.json({ available });
-  } catch {
-    res.json({ available: false });
-  }
-});
+function sendJson(res, status, body) {
+  const data = JSON.stringify(body);
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Length': Buffer.byteLength(data),
+    'Cache-Control': 'no-store'
+  });
+  res.end(data);
+}
 
-// ===== Auth: Register =====
-app.post('/api/register', async (req, res) => {
-  const { email, phone, password, name } = req.body;
-  if (!password || (!email && !phone)) {
-    return res.status(400).json({ error: '请提供邮箱或手机号及密码' });
-  }
-  try {
-    const existing = await db.getUserByLogin(email || phone);
-    if (existing) return res.status(409).json({ error: '该邮箱或手机号已注册' });
-    const hash = bcrypt.hashSync(password, 10);
-    const user = await db.createUser(email, phone, hash, name);
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token, user });
-  } catch (err) {
-    res.status(500).json({ error: '注册失败: ' + err.message });
-  }
-});
-
-// ===== Auth: Login =====
-app.post('/api/login', async (req, res) => {
-  const { login, password } = req.body;
-  if (!login || !password) return res.status(400).json({ error: '请输入登录凭证' });
-  try {
-    const user = await db.getUserByLogin(login);
-    if (!user) return res.status(401).json({ error: '用户不存在，请先注册' });
-    if (!bcrypt.compareSync(password, user.password_hash)) {
-      return res.status(401).json({ error: '密码错误' });
-    }
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    const { password_hash, ...safeUser } = user;
-    res.json({ token, user: safeUser });
-  } catch (err) {
-    res.status(500).json({ error: '登录失败: ' + err.message });
-  }
-});
-
-// ===== Auth: Profile =====
-app.get('/api/profile', auth, async (req, res) => {
-  const user = await db.getUserById(req.userId);
-  if (!user) return res.status(404).json({ error: '用户不存在' });
-  res.json({ user });
-});
-
-// ===== Credits =====
-app.get('/api/credits', auth, async (req, res) => {
-  const credits = await db.getCredits(req.userId);
-  const isBeta = await db.isBetaUser(req.userId);
-  res.json({ credits, isBeta, packages: payment.PACKAGES, paymentReady: payment.isConfigured() });
-});
-
-// ===== Create Payment Order (static Alipay QR mode, 2026-08-06) =====
-app.post('/api/payment/create', auth, async (req, res) => {
-  try {
-    const pkgKey = req.body.package || 'basic';
-    const pkg = payment.PACKAGES[pkgKey];
-    if (!pkg) return res.status(400).json({ error: '无效的套餐类型' });
-
-    const orderNo = payment.generateOrderNo();
-    const order = await db.createOrder(req.userId, orderNo, pkg.amount);
-
-    res.json({
-      orderId: order.id,
-      orderNo: order.order_no,
-      amount: pkg.label,
-      credits: pkg.credits,
-      packageName: pkg.name,
-      qrImage: pkg.qrImage,
-      staticQr: true,
-      message: '请使用支付宝扫码支付，付款后请填写支付凭证以便开通积分',
-    });
-  } catch (err) {
-    console.error('[Payment] Create order error:', err.message);
-    res.status(500).json({ error: '创建支付订单失败: ' + err.message });
-  }
-});
-
-// ===== Submit payment proof (manual reconciliation) =====
-app.post('/api/payment/notify', auth, async (req, res) => {
-  try {
-    const { orderNo, alipayNote } = req.body;
-    if (!orderNo) return res.status(400).json({ error: '缺少订单号' });
-
-    const order = await db.getOrderByOrderNo(orderNo);
-    if (!order) return res.status(404).json({ error: '订单不存在' });
-    if (order.user_id !== req.userId) return res.status(403).json({ error: '无权操作此订单' });
-
-    await db.updateOrderNote(order.id, alipayNote || '');
-    res.json({ success: true, message: '已收到您的支付凭证，我们会在 5-10 分钟内核对并开通积分' });
-  } catch (err) {
-    console.error('[Payment] Notify error:', err.message);
-    res.status(500).json({ error: '提交失败: ' + err.message });
-  }
-});
-
-// ===== Payment Callback (WeChat Pay — kept for future switch) =====
-app.post('/api/payment/callback', async (req, res) => {
-  try {
-    const body = req.body.toString('utf8');
-    const data = JSON.parse(body);
-    const resource = data.resource;
-
-    const decrypted = payment.decryptCallback(resource);
-    const { out_trade_no, transaction_id, trade_state } = decrypted;
-
-    if (trade_state === 'SUCCESS') {
-      await db.updateOrderStatus(out_trade_no, 'paid', transaction_id);
-      const order = await db.getOrderByOrderNo(out_trade_no);
-      if (order) {
-        const creditsMap = { 199: 1, 999: 5, 2990: 15 };
-        const creditsToAdd = creditsMap[order.amount] || 1;
-        await db.addCredits(order.user_id, creditsToAdd);
+function readBody(req, limit = 16384) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', chunk => {
+      size += chunk.length;
+      if (size > limit) {
+        reject(Object.assign(new Error('payload too large'), { status: 413 }));
+        req.destroy();
+        return;
       }
-      console.log(`[Payment] Order ${out_trade_no} paid successfully`);
-    }
-
-    res.status(200).json({ code: 'SUCCESS', message: 'success' });
-  } catch (err) {
-    console.error('[Payment] Callback error:', err.message);
-    res.status(500).json({ code: 'FAIL', message: 'error' });
-  }
-});
-
-// ===== Check Order Status =====
-app.get('/api/payment/status/:orderNo', auth, async (req, res) => {
-  const order = await db.getOrderByOrderNo(req.params.orderNo);
-  if (!order) return res.status(404).json({ error: '订单不存在' });
-  if (order.user_id !== req.userId) return res.status(403).json({ error: '无权查看此订单' });
-
-  const credits = await db.getCredits(req.userId);
-  res.json({
-    status: order.status,
-    paid: order.status === 'paid',
-    credits,
-  });
-});
-
-// ===== Analyze (with credit check) =====
-app.post('/api/analyze', auth, async (req, res) => {
-  const { photo, idealPhoto, height, weight, skinType, stylePreference, reportType } = req.body;
-  if (!photo) return res.status(400).json({ error: '请上传照片' });
-  if (!height || !weight) return res.status(400).json({ error: '请填写身高和体重' });
-
-  const rType = ['basic', 'deep', 'vip'].includes(reportType) ? reportType : 'basic';
-  const cost = payment.REPORT_COSTS[rType];
-  const isBeta = await db.isBetaUser(req.userId);
-
-  // Check credits (beta users bypass)
-  if (!isBeta) {
-    const credits = await db.getCredits(req.userId);
-    if (credits < cost) {
-      const pkgKey = rType;
-      const pkg = payment.PACKAGES[pkgKey];
-      return res.status(402).json({
-        error: '积分不足',
-        needPayment: true,
-        package: pkgKey,
-        amount: pkg ? pkg.label : '1.99',
-        creditsNeeded: cost,
-        creditsHave: credits,
-        message: `此报告需要 ${cost} 次积分，您当前剩余 ${credits} 次。充值 ${pkg ? pkg.label : '1.99'} 元即可获得 ${cost} 次分析权限`,
-      });
-    }
-  }
-
-  try {
-    // Deduct credits (skip for beta)
-    if (!isBeta) {
-      await db.deductCredit(req.userId, cost);
-    }
-
-    // Step 1: Vision analysis (Qwen-VL)
-    const imageDescription = await ai.analyzeImage(photo, 'user');
-    const idealDescription = idealPhoto ? await ai.analyzeImage(idealPhoto, 'ideal') : null;
-
-    // Step 2: Report generation (DeepSeek)
-    const reportCount = await db.getReportCount(req.userId);
-    const report = await ai.generateReport({
-      imageDescription,
-      idealDescription,
-      height: parseFloat(height),
-      weight: parseFloat(weight),
-      skinType,
-      stylePreference,
-      reportCount,
-      reportType: rType,
+      chunks.push(chunk);
     });
-
-    // Step 3: Save to database
-    const photoMeta = parseDataUrl(photo);
-    const idealMeta = idealPhoto ? parseDataUrl(idealPhoto) : null;
-    const saved = await db.saveReport(req.userId, {
-      height: parseFloat(height),
-      weight: parseFloat(weight),
-      skinType,
-      stylePreference,
-      score: report.overallScore,
-      keywords: report.scoreTitle ? report.scoreTitle.split('|').map(s=>s.trim()).filter(Boolean) : [],
-      reportData: report,
-      imageDescription,
-      idealDescription,
-      photoPath: photo,
-      photoMime: photoMeta?.mime,
-      photoWidth: photoMeta?.width,
-      photoHeight: photoMeta?.height,
-      idealPhotoPath: idealPhoto,
-      reportType: rType,
+    req.on('end', () => {
+      const raw = Buffer.concat(chunks).toString('utf8');
+      if (!raw) return resolve({});
+      try { resolve(JSON.parse(raw)); }
+      catch (e) { reject(Object.assign(new Error('invalid json'), { status: 400 })); }
     });
-
-    const remainingCredits = await db.getCredits(req.userId);
-    res.json({
-      report: {
-        ...report,
-        id: saved.id,
-        created_at: saved.created_at,
-        reportType: rType,
-        photo: photo,
-        photoWidth: photoMeta?.width,
-        photoHeight: photoMeta?.height,
-        photoMime: photoMeta?.mime,
-      },
-      remainingCredits,
-      isBeta,
-    });
-  } catch (err) {
-    console.error('[Analyze] Error:', err.message);
-    // Refund credits on failure (skip for beta)
-    if (!isBeta) {
-      await db.addCredits(req.userId, cost);
-    }
-    res.status(500).json({ error: '分析失败: ' + err.message + '，积分已退回' });
-  }
-});
-
-// Helper: extract mime from a base64 data URL
-function parseDataUrl(dataUrl) {
-  if (!dataUrl || typeof dataUrl !== 'string') return null;
-  const m = dataUrl.match(/^data:([^;]+);base64,/);
-  if (!m) return null;
-  return { mime: m[1] };
-}
-
-// ===== History =====
-app.get('/api/history', auth, async (req, res) => {
-  const reports = await db.getReportsByUserId(req.userId);
-  const summary = reports.map(r => {
-    const { photo_path, ideal_photo_path, report_data, ...rest } = r;
-    return {
-      ...rest,
-      has_photo: Boolean(photo_path),
-    };
-  });
-  res.json({ reports: summary });
-});
-
-app.get('/api/report/:id', auth, async (req, res) => {
-  const report = await db.getReportById(req.params.id);
-  if (!report || report.user_id !== req.userId) {
-    return res.status(404).json({ error: '报告不存在' });
-  }
-  res.json({ report });
-});
-
-// ===== Share: generate share link (auth required) =====
-app.post('/api/report/:id/share', auth, async (req, res) => {
-  try {
-    const report = await db.getReportById(req.params.id);
-    if (!report || report.user_id !== req.userId) {
-      return res.status(404).json({ error: '报告不存在' });
-    }
-    // If already has a token, return it
-    if (report.share_token) {
-      return res.json({ token: report.share_token, url: `${BASE_URL}/s/${report.share_token}` });
-    }
-    // Generate a new random token
-    const token = crypto.randomBytes(12).toString('base64url');
-    await db.setShareToken(report.id, token);
-    res.json({ token, url: `${BASE_URL}/s/${token}` });
-  } catch (err) {
-    console.error('[Share] Create error:', err.message);
-    res.status(500).json({ error: '生成分享链接失败: ' + err.message });
-  }
-});
-
-// ===== Share: revoke share link (auth required) =====
-app.delete('/api/report/:id/share', auth, async (req, res) => {
-  try {
-    const report = await db.getReportById(req.params.id);
-    if (!report || report.user_id !== req.userId) {
-      return res.status(404).json({ error: '报告不存在' });
-    }
-    await db.revokeShareToken(report.id);
-    res.json({ success: true, message: '已取消分享' });
-  } catch (err) {
-    res.status(500).json({ error: '取消分享失败: ' + err.message });
-  }
-});
-
-// ===== Share: view shared report (public, no auth) =====
-app.get('/api/shared/:token', async (req, res) => {
-  try {
-    const report = await db.getReportByShareToken(req.params.token);
-    if (!report) {
-      return res.status(404).json({ error: '分享链接无效或已失效' });
-    }
-    // Return report data + photo for rendering (read-only)
-    const reportData = report.report_data || {};
-    res.json({
-      report: {
-        ...reportData,
-        id: report.id,
-        created_at: report.created_at,
-        reportType: report.report_type,
-        photo: report.photo_path,
-        photoWidth: report.photo_width,
-        photoHeight: report.photo_height,
-        photoMime: report.photo_mime,
-      },
-    });
-  } catch (err) {
-    console.error('[Share] View error:', err.message);
-    res.status(500).json({ error: '加载分享报告失败' });
-  }
-});
-
-// ===== Feedback =====
-app.post('/api/feedback', auth, async (req, res) => {
-  const { rating, content } = req.body;
-  if (!content) return res.status(400).json({ error: '请输入反馈内容' });
-  const feedback = await db.saveFeedback(req.userId, rating || 5, content);
-  res.json({ feedback });
-});
-
-app.get('/api/feedback', auth, async (req, res) => {
-  const feedback = await db.getFeedbackByUserId(req.userId);
-  res.json({ feedback });
-});
-
-// ===== SPA Fallback =====
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// ===== Async startup: init DB → create beta account → listen =====
-async function startServer() {
-  try {
-    await db.init();
-    console.log('  -> Database initialized');
-  } catch (err) {
-    console.error('  -> Database init failed:', err.message);
-    console.error('  -> Make sure DATABASE_URL is set in .env or Render Environment');
-    process.exit(1);
-  }
-
-  try {
-    const betaHash = bcrypt.hashSync(BETA_PASSWORD, 10);
-    await db.ensureBetaUser(BETA_EMAIL, betaHash, BETA_NAME);
-    console.log(`  -> Beta account ready: ${BETA_EMAIL}`);
-  } catch (err) {
-    console.error('  -> Beta account setup failed:', err.message);
-  }
-
-  app.listen(PORT, () => {
-    console.log(`\n  GlowSelf\n  -> http://localhost:${PORT}\n  -> Payment: ${payment.isConfigured() ? 'Ready' : 'Not configured'}\n  -> DB: PostgreSQL\n`);
+    req.on('error', reject);
   });
 }
 
-startServer();
+function cleanString(value, max) {
+  return String(value == null ? '' : value).replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
+}
+
+function cleanCampaign(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const out = {};
+  ['source', 'medium', 'campaign', 'content', 'term'].forEach(key => {
+    const v = cleanString(value[key], 80);
+    if (v) out[key] = v;
+  });
+  return Object.keys(out).length ? out : null;
+}
+
+function isEmail(value) {
+  return /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(String(value || ''));
+}
+
+async function appendJsonl(file, record) {
+  await fsp.mkdir(path.dirname(file), { recursive: true });
+  await fsp.appendFile(file, JSON.stringify(record) + '\n', 'utf8');
+}
+
+async function readJsonl(file) {
+  try {
+    const raw = await fsp.readFile(file, 'utf8');
+    return raw.split('\n').filter(Boolean).map(line => {
+      try { return JSON.parse(line); } catch (e) { return null; }
+    }).filter(Boolean);
+  } catch (e) {
+    if (e.code === 'ENOENT') return [];
+    throw e;
+  }
+}
+
+async function handleEvent(req, res) {
+  if (!rateLimit(clientIp(req), 180, 60_000)) return sendJson(res, 429, { ok: false, error: 'rate_limited' });
+  const body = await readBody(req, 8192);
+  const name = cleanString(body.name, 64);
+  if (!name) return sendJson(res, 400, { ok: false, error: 'name_required' });
+  const props = body.props && typeof body.props === 'object' && !Array.isArray(body.props) ? body.props : {};
+  const record = {
+    ts: new Date().toISOString(),
+    name,
+    props,
+    sessionId: cleanString(body.sessionId, 64),
+    path: cleanString(body.path, 200),
+    referrer: cleanString(body.referrer, 300).slice(0, 300),
+    ip: clientIp(req).slice(0, 64),
+    ua: cleanString(req.headers['user-agent'], 200)
+  };
+  await appendJsonl(EVENTS_FILE, record);
+  sendJson(res, 200, { ok: true });
+}
+
+async function handleLead(req, res) {
+  if (!rateLimit(clientIp(req), 20, 60_000)) return sendJson(res, 429, { ok: false, error: 'rate_limited' });
+  const body = await readBody(req, 16384);
+  const intent = cleanString(body.intent, 48);
+  const email = cleanString(body.email, 200).toLowerCase();
+  const allowed = new Set(['plus_trial', 'free_report', 'result_feedback', 'account_email', 'consult', 'notify']);
+  if (!allowed.has(intent)) return sendJson(res, 400, { ok: false, error: 'invalid_intent' });
+  if (!email && intent !== 'result_feedback') return sendJson(res, 400, { ok: false, error: 'email_required' });
+  if (email && !isEmail(email)) return sendJson(res, 400, { ok: false, error: 'invalid_email' });
+
+  const record = {
+    ts: new Date().toISOString(),
+    id: crypto.randomBytes(8).toString('hex'),
+    intent,
+    email,
+    source: cleanString(body.source, 80),
+    message: cleanString(body.message, 1000),
+    uid: cleanString(body.uid, 64),
+    ref: cleanString(body.ref, 64),
+    campaign: cleanCampaign(body.campaign),
+    result: body.result && typeof body.result === 'object' ? {
+      seasonId: cleanString(body.result.seasonId, 32),
+      styleId: cleanString(body.result.styleId, 32),
+      goal: cleanString(body.result.answers && body.result.answers.goal, 32)
+    } : null,
+    ip: clientIp(req).slice(0, 64),
+    ua: cleanString(req.headers['user-agent'], 200)
+  };
+  await appendJsonl(LEADS_FILE, record);
+
+  if (LEADS_WEBHOOK) {
+    fetch(LEADS_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    }).catch(() => {});
+  }
+  sendJson(res, 200, { ok: true, id: record.id });
+}
+
+async function handleStats(req, res, url) {
+  const key = req.headers['x-admin-key'] || url.searchParams.get('key') || '';
+  if (!ADMIN_KEY || key !== ADMIN_KEY) return sendJson(res, 404, { ok: false });
+  const days = Math.min(90, Math.max(1, Number(url.searchParams.get('days') || 7)));
+  const since = Date.now() - days * 86400_000;
+  const events = (await readJsonl(EVENTS_FILE)).filter(e => Date.parse(e.ts) >= since);
+  const leads = (await readJsonl(LEADS_FILE)).filter(e => Date.parse(e.ts) >= since);
+  const byName = {};
+  const sessions = new Set();
+  const byDay = {};
+  const seasonCounts = {};
+  const styleCounts = {};
+  const referrers = {};
+  const campaigns = {};
+
+  const start = new Date();
+  start.setUTCHours(0, 0, 0, 0);
+  start.setUTCDate(start.getUTCDate() - (days - 1));
+  for (let i = 0; i < days; i++) {
+    const d = new Date(start.getTime() + i * 86400_000).toISOString().slice(0, 10);
+    byDay[d] = { date: d, events: 0, sessions: new Set() };
+  }
+
+  for (const e of events) {
+    byName[e.name] = (byName[e.name] || 0) + 1;
+    if (e.sessionId) sessions.add(e.sessionId);
+    const day = String(e.ts || '').slice(0, 10);
+    if (byDay[day]) {
+      byDay[day].events += 1;
+      if (e.sessionId) byDay[day].sessions.add(e.sessionId);
+    }
+    const props = e.props || {};
+    if (props.seasonId) seasonCounts[props.seasonId] = (seasonCounts[props.seasonId] || 0) + 1;
+    if (props.styleId) styleCounts[props.styleId] = (styleCounts[props.styleId] || 0) + 1;
+    if (props.ref) referrers['ref:' + props.ref] = (referrers['ref:' + props.ref] || 0) + 1;
+    const c = props.campaign;
+    if (c && typeof c === 'object' && (c.source || c.campaign)) {
+      const label = (cleanString(c.source, 40) || '未知来源') + (c.campaign ? ' / ' + cleanString(c.campaign, 40) : '');
+      campaigns[label] = (campaigns[label] || 0) + 1;
+    }
+    try {
+      if (e.referrer) {
+        const host = new URL(e.referrer).hostname.replace(/^www\./, '');
+        if (host && host !== 'glowself.cn' && host !== 'localhost') referrers[host] = (referrers[host] || 0) + 1;
+      }
+    } catch (_) {}
+  }
+
+  const byIntent = {};
+  for (const l of leads) byIntent[l.intent] = (byIntent[l.intent] || 0) + 1;
+  const maskEmail = (value) => {
+    const email = String(value || '');
+    const at = email.indexOf('@');
+    if (at < 1) return '—';
+    return email.slice(0, 1) + '***' + email.slice(at);
+  };
+  const recentLeads = leads
+    .slice()
+    .sort((a, b) => String(b.ts).localeCompare(String(a.ts)))
+    .slice(0, 30)
+    .map(l => ({
+      ts: l.ts,
+      email: maskEmail(l.email),
+      intent: l.intent || '—',
+      source: l.source || '—',
+      seasonId: (l.result && l.result.seasonId) || '—'
+    }));
+
+  sendJson(res, 200, {
+    ok: true,
+    days,
+    events: events.length,
+    sessions: sessions.size,
+    byName,
+    leads: leads.length,
+    byIntent,
+    byDay: Object.values(byDay).map(d => ({ date: d.date, events: d.events, sessions: d.sessions.size })),
+    topSeasons: Object.entries(seasonCounts).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    topStyles: Object.entries(styleCounts).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    topReferrers: Object.entries(referrers).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    topCampaigns: Object.entries(campaigns).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    recentLeads
+  });
+}
+
+function injectShareMeta(html, season, style, url) {
+  const title = `我是「${season.name} · ${style}」，这是我的色彩 DNA｜GlowSelf`;
+  const desc = season.tagline + ' 不用上传照片，11 个问题找到你的色彩与风格。';
+  const image = `https://glowself.cn/assets/img/og/${encodeURIComponent(season.id)}.png`;
+  return html
+    .replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`)
+    .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${desc}">`)
+    .replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${url}">`)
+    .replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${title}">`)
+    .replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${desc}">`)
+    .replace(/<meta property="og:url" content="[^"]*">/, `<meta property="og:url" content="${url}">`)
+    .replace(/<meta property="og:image" content="[^"]*">/, `<meta property="og:image" content="${image}">`);
+}
+
+function sitemapXml() {
+  const today = new Date().toISOString().slice(0, 10);
+  const urls = SITEMAP.map(p => `  <url><loc>https://glowself.cn${p}</loc><lastmod>${today}</lastmod><changefreq>${p === '/' ? 'daily' : 'monthly'}</changefreq><priority>${p === '/' ? '1.0' : p.startsWith('/article/') ? '0.7' : '0.8'}</priority></url>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+}
+
+async function serveStatic(req, res, pathname) {
+  let rel = decodeURIComponent(pathname);
+  if (rel === '/') rel = '/index.html';
+  const abs = path.resolve(ROOT, '.' + rel);
+  if (!abs.startsWith(ROOT + path.sep)) return sendJson(res, 403, { ok: false, error: 'forbidden' });
+  let stat;
+  try { stat = await fsp.stat(abs); } catch (e) { stat = null; }
+  if (!stat && !path.extname(abs)) {
+    try {
+      const htmlAbs = abs + '.html';
+      const htmlStat = await fsp.stat(htmlAbs);
+      if (htmlStat.isFile()) return serveFile(req, res, htmlAbs, htmlStat);
+    } catch (e) {}
+  }
+  if (!stat || !stat.isFile()) {
+    const notFound = path.join(ROOT, '404.html');
+    try {
+      const html = await fsp.readFile(notFound, 'utf8');
+      res.writeHead(404, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store' });
+      return res.end(html);
+    } catch (e) {
+      return sendJson(res, 404, { ok: false, error: 'not_found' });
+    }
+  }
+  return serveFile(req, res, abs, stat);
+}
+
+async function serveFile(req, res, abs, stat) {
+  const ext = path.extname(abs).toLowerCase();
+  const isHtml = ext === '.html';
+  const etag = `"${stat.size.toString(16)}-${stat.mtimeMs.toString(16)}"`;
+  if (req.headers['if-none-match'] === etag) {
+    res.writeHead(304, { ETag: etag });
+    return res.end();
+  }
+  const headers = {
+    'Content-Type': MIME[ext] || 'application/octet-stream',
+    'Content-Length': stat.size,
+    'ETag': etag,
+    'Cache-Control': isHtml || ext === '.css' || ext === '.js' ? 'no-cache' : 'public, max-age=86400',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'X-Frame-Options': 'SAMEORIGIN',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()'
+  };
+  res.writeHead(200, headers);
+  if (req.method === 'HEAD') return res.end();
+  fs.createReadStream(abs).pipe(res);
+}
+
+const server = http.createServer(async (req, res) => {
+  const started = Date.now();
+  const url = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
+  const p = url.pathname;
+  try {
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, { 'Allow': 'GET, HEAD, POST, OPTIONS' });
+      return res.end();
+    }
+    if (p === '/api/health') return sendJson(res, 200, { status: 'ok', time: new Date().toISOString(), version: 'v2' });
+    if (p === '/api/events' && req.method === 'POST') return await handleEvent(req, res);
+    if (p === '/api/leads' && req.method === 'POST') return await handleLead(req, res);
+    if (p === '/api/stats' && req.method === 'GET') return await handleStats(req, res, url);
+    if (p === '/season' || p === '/season/') {
+      res.writeHead(301, { Location: '/season/index.html', 'Cache-Control': 'public, max-age=3600' });
+      return res.end();
+    }
+    if (p === '/article' || p === '/article/') {
+      res.writeHead(301, { Location: '/article/index.html', 'Cache-Control': 'public, max-age=3600' });
+      return res.end();
+    }
+    if (p === '/robots.txt') {
+      res.writeHead(200, { 'Content-Type': MIME['.txt'], 'Cache-Control': 'public, max-age=3600' });
+      return res.end('User-agent: *\nAllow: /\nDisallow: /app.html\nDisallow: /admin.html\nDisallow: /result.html\nDisallow: /api/\nSitemap: https://glowself.cn/sitemap.xml\n');
+    }
+    if (p === '/sitemap.xml') {
+      res.writeHead(200, { 'Content-Type': MIME['.xml'], 'Cache-Control': 'public, max-age=3600' });
+      return res.end(sitemapXml());
+    }
+    const share = p.match(/^\/r\/([a-z-]+)\/([a-z-]+)\/?$/);
+    if (share) {
+      const season = SEASONS[share[1]];
+      const style = STYLES[share[2]];
+      if (!season || !style) {
+        res.writeHead(302, { Location: '/' });
+        return res.end();
+      }
+      const html = await fsp.readFile(path.join(ROOT, 'result.html'), 'utf8');
+      const body = injectShareMeta(html, { ...season, id: share[1] }, style, 'https://glowself.cn' + p);
+      res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'public, max-age=300' });
+      return res.end(body);
+    }
+    if (req.method !== 'GET' && req.method !== 'HEAD') return sendJson(res, 405, { ok: false, error: 'method_not_allowed' });
+    return await serveStatic(req, res, p);
+  } catch (err) {
+    const status = err.status || 500;
+    if (status >= 500) console.error('[error]', req.method, p, err);
+    if (!res.headersSent) sendJson(res, status, { ok: false, error: status === 500 ? 'internal_error' : err.message });
+    else res.end();
+  } finally {
+    if (process.env.LOG_REQUESTS === '1') {
+      console.log(`${req.method} ${p} ${res.statusCode} ${Date.now() - started}ms`);
+    }
+  }
+});
+
+server.listen(PORT, () => {
+  console.log(`GlowSelf server on http://127.0.0.1:${PORT}`);
+});
+
+module.exports = server;

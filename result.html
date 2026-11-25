@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>你的色彩 DNA 报告｜GlowSelf 光绽</title>
+  <meta name="description" content="你的 12 季色彩类型、风格坐标、专属配色、妆容与发型建议。由 GlowSelf 生成，不评分，不排名。">
+  <link rel="canonical" href="https://glowself.cn/result.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="GlowSelf 光绽">
+  <meta property="og:title" content="我的色彩 DNA 报告｜GlowSelf">
+  <meta property="og:description" content="不是颜值打分，是一份能直接照着穿的形象说明书。">
+  <meta property="og:image" content="https://glowself.cn/assets/img/og-cover.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="robots" content="noindex,follow">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body class="result-body">
+  <div class="nav-wrap">
+    <div class="shell nav">
+      <a class="brand" href="/" aria-label="GlowSelf 首页">
+        <img class="brand-mark" src="/assets/img/mark.svg" alt="">
+        <span><span class="brand-name">光绽 GlowSelf</span><span class="brand-en">YOUR COLOUR DOSSIER</span></span>
+      </a>
+      <div class="nav-actions">
+        <a class="nav-login" href="/test.html" id="retake-link">重新测试</a>
+        <button class="btn btn-primary btn-sm" data-open-unlock="result_nav">解锁完整报告</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="shared-banner" class="shared-banner" hidden>
+    <div class="shell shared-banner-inner">
+      <span>你正在看一份分享报告。</span>
+      <a class="btn btn-accent btn-sm" href="/test.html">测测我的色彩 DNA →</a>
+    </div>
+  </div>
+
+  <main id="result-root" hidden>
+    <section class="result-hero">
+      <div class="shell result-hero-grid">
+        <div>
+          <div class="result-kicker">
+            <span class="tag" id="season-family">秋</span>
+            <span class="tiny" id="report-date">GLOWSELF · PERSONAL COLOUR DNA</span>
+          </div>
+          <h1 class="result-title">你的色彩 DNA 是<br><em id="season-name">柔暖秋</em></h1>
+          <p class="result-sub" id="season-tagline"></p>
+          <div class="result-tags" id="result-tags"></div>
+          <div class="result-score-row">
+            <div class="result-score">
+              <div class="k">冷暖坐标</div>
+              <div class="v" id="coord-warm">偏暖</div>
+            </div>
+            <div class="result-score">
+              <div class="k">明度</div>
+              <div class="v" id="coord-depth">中低</div>
+            </div>
+            <div class="result-score">
+              <div class="k">饱和度</div>
+              <div class="v" id="coord-clarity">柔和</div>
+            </div>
+            <div class="result-score">
+              <div class="k">风格坐标</div>
+              <div class="v" id="style-name">温婉优雅</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-palette-card">
+          <div class="top">
+            <div>
+              <div class="label">YOUR PALETTE · 12 COLOURS</div>
+              <div class="name" id="palette-title">柔暖秋</div>
+            </div>
+            <span class="tiny" id="palette-en">SOFT AUTUMN</span>
+          </div>
+          <div class="palette-large" id="palette-large"></div>
+          <div class="foot">
+            <span>靠近脸部的颜色，比衣服款式更重要。</span>
+            <span id="metal-short">金属：柔金</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="shell result-body-grid">
+      <div class="result-main">
+        <section class="result-section">
+          <h2><span class="no">01</span>为什么是<span id="season-name-2">柔暖秋</span>？</h2>
+          <p id="season-description"></p>
+          <div class="divider"></div>
+          <div class="kicker">你的本命色 · 优先靠近脸部</div>
+          <div class="color-list" id="best-colors"></div>
+          <div class="kicker" style="margin-top:22px">暂时放一放 · 不是不能穿，是别贴脸</div>
+          <div class="avoid-list" id="avoid-list"></div>
+        </section>
+
+        <section class="result-section">
+          <h2><span class="no">02</span>你的风格坐标：<span id="style-name-2">温婉优雅</span></h2>
+          <p id="style-description"></p>
+          <div class="meta-grid">
+            <div class="meta-cell"><div class="k">轮廓</div><div class="v" id="style-silhouette"></div></div>
+            <div class="meta-cell"><div class="k">面料</div><div class="v" id="style-fabrics"></div></div>
+            <div class="meta-cell"><div class="k">优先单品</div><div class="v" id="style-pieces"></div></div>
+          </div>
+          <div class="avoid-list" id="style-avoid"></div>
+        </section>
+
+        <section class="result-section">
+          <h2><span class="no">03</span>妆容与发型，先选对色。</h2>
+          <p>不需要换一张脸。把颜色换对，气色和精神会先回来。</p>
+          <div class="meta-grid">
+            <div class="meta-cell"><div class="k">唇色方向</div><div class="v" id="lip"></div></div>
+            <div class="meta-cell"><div class="k">腮红方向</div><div class="v" id="blush"></div></div>
+            <div class="meta-cell"><div class="k">眼影方向</div><div class="v" id="eye"></div></div>
+            <div class="meta-cell"><div class="k">发色方向</div><div class="v" id="hair"></div></div>
+            <div class="meta-cell"><div class="k">首饰金属</div><div class="v" id="metal"></div></div>
+            <div class="meta-cell"><div class="k">底妆关键词</div><div class="v" id="foundation">贴合颈色 · 微光泽</div></div>
+          </div>
+        </section>
+
+        <section class="result-section">
+          <h2><span class="no">04</span>3 套明天就能穿的公式。</h2>
+          <p>不用买新衣服。先从你已经有的颜色里，挑最接近的。</p>
+          <ol class="outfit-list" id="outfit-list"></ol>
+        </section>
+
+        <section class="result-section">
+          <h2><span class="no">05</span>你的身形：<span id="body-name">H 型 / 直筒</span></h2>
+          <p id="body-advice"></p>
+          <div class="divider"></div>
+          <div class="kicker">先解决这件事</div>
+          <p style="font-family:var(--serif);font-size:20px;color:var(--ink);margin-top:8px" id="goal-headline"></p>
+          <p id="goal-copy"></p>
+        </section>
+
+        <div class="locked-wrap">
+          <div class="locked-content" aria-hidden="true">
+            <section class="result-section" style="border:0">
+              <h2><span class="no">06</span>你的 30 天形象计划</h2>
+              <p>第 1 周：清理衣柜里不属于你色盘的颜色。第 2 周：建立 12 件核心单品。第 3 周：每天一套 look。第 4 周：校准与补充。</p>
+              <div class="meta-grid">
+                <div class="meta-cell"><div class="k">DAY 01</div><div class="v">奶油针织 + 燕麦阔腿裤 + 焦糖腰带</div></div>
+                <div class="meta-cell"><div class="k">DAY 02</div><div class="v">雾粉衬衫 + 可可半裙 + 裸色乐福鞋</div></div>
+                <div class="meta-cell"><div class="k">DAY 03</div><div class="v">橄榄工装 + 白 T + 棕色托特包</div></div>
+              </div>
+              <div class="divider"></div>
+              <div class="kicker">购物清单 · 只买缺的</div>
+              <p>一件接近你本命色的上装 · 一条中性色直筒裤 · 一对柔金耳饰 · 一支豆沙玫瑰口红</p>
+            </section>
+          </div>
+          <div class="locked-overlay">
+            <div class="lock-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9V6.5a3 3 0 016 0V9" stroke="currentColor" stroke-width="1.5"/></svg>
+            </div>
+            <h3>你的完整形象说明书</h3>
+            <p>完整 24 个本命色、妆容色号、发型方向、12 套场景 look、30 天计划和购物清单。内测阶段登记，不扣费。</p>
+            <button class="btn btn-accent" data-open-unlock="result_locked">解锁 Plus 完整报告</button>
+            <div class="unlock-line"><span>7 天免费试用</span><span>·</span><span>随时取消</span><span>·</span><span>7 天无理由退款</span></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="result-side">
+        <div class="side-card share-card">
+          <div class="kicker">SHARE YOUR DNA</div>
+          <h3>把这份报告<br>发给朋友。</h3>
+          <p>不带分数，不带排名。只有你的颜色和风格。</p>
+          <canvas class="share-preview" id="share-canvas" width="1080" height="1350" aria-label="分享卡预览"></canvas>
+          <div class="share-actions">
+            <button class="btn btn-light btn-sm" id="download-card" type="button">下载分享卡</button>
+            <button class="btn btn-light btn-sm" id="copy-link" type="button">复制链接</button>
+          </div>
+          <p class="form-note">分享链接只包含色彩类型与风格，不包含你的任何答题细节。</p>
+        </div>
+
+        <div class="side-card light">
+          <div class="kicker">SAVE YOUR REPORT</div>
+          <h3>把报告发到邮箱。</h3>
+          <p>方便以后回来对照，也方便在衣柜前打开。</p>
+          <form class="email-form" id="email-report-form">
+            <input type="email" name="email" required placeholder="你的邮箱" autocomplete="email" aria-label="邮箱">
+            <button class="btn btn-primary btn-sm" type="submit">发送</button>
+          </form>
+          <p class="form-note">只用于发送这份报告和产品更新，可随时退订。</p>
+          <div class="success-msg" id="email-success" hidden>已记录。内测期间由人工发送，通常 24 小时内到达。</div>
+        </div>
+
+        <div class="side-card light">
+          <div class="kicker">CALIBRATE</div>
+          <h3>这套建议像你吗？</h3>
+          <p>你的反馈会用来校准下一次推荐。没有对错。</p>
+          <div class="accuracy" id="accuracy">
+            <button type="button" data-accuracy="yes">很像</button>
+            <button type="button" data-accuracy="somewhat">一部分</button>
+            <button type="button" data-accuracy="no">不太像</button>
+          </div>
+        </div>
+
+        <div class="side-card light">
+          <div class="kicker">NEXT STEP</div>
+          <h3>明天穿什么？</h3>
+          <p>进入你的空间，查看按天气和场景生成的每日 look、衣橱和 30 天计划。</p>
+          <a class="btn btn-primary btn-sm" href="/app.html">打开我的空间 →</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div id="empty-state" class="shell" style="padding:100px 0;text-align:center" hidden>
+    <h1 class="display-sm">还没有你的报告。</h1>
+    <p class="lede" style="margin:14px auto 28px;max-width:420px">先花 3 分钟回答 11 个问题。不用注册，不用拍照。</p>
+    <a class="btn btn-accent btn-lg" href="/test.html">开始免费测试 →</a>
+  </div>
+
+  <footer class="footer">
+    <div class="shell">
+      <div class="footer-bottom" style="margin-top:0;border-top:0;padding-top:0">
+        <span>© <span data-year>2026</span> GlowSelf 光绽</span>
+        <span>本报告基于色彩理论与形象顾问规则生成，不构成医疗或心理建议。</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/data.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+  <script src="/assets/js/result.js" defer></script>
+</body>
+</html>

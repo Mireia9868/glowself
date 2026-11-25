@@ -1,19 +1,19 @@
 {
   "name": "glowself",
-  "version": "1.0.0",
-  "description": "光绽 GlowSelf - 发现你的闪耀之美",
-  "engines": {
-    "node": ">=20.0.0"
-  },
+  "version": "2.0.0",
+  "private": true,
+  "description": "GlowSelf 光绽 — 色彩 DNA 测试与个人形象订阅",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "PORT=4173 node server.js",
+    "check": "node scripts/check.js",
+    "data": "node scripts/export_seasons.js",
+    "seasons": "python3 scripts/build_seasons.py",
+    "faces": "python3 scripts/build_faces.py",
+    "bodies": "python3 scripts/build_bodies.py"
   },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "dotenv": "^17.4.2",
-    "express": "^4.21.0",
-    "jsonwebtoken": "^9.0.2",
-    "pg": "^8.22.0"
+  "engines": {
+    "node": ">=20"
   }
 }

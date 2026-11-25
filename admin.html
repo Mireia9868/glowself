@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>运营仪表盘｜GlowSelf</title>
+  <meta name="description" content="GlowSelf 内部运营仪表盘：测试漏斗、留资、来源和内容分布。不对外公开。">
+  <meta name="robots" content="noindex,nofollow">
+  <meta property="og:image" content="https://glowself.cn/assets/img/og-cover.png">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body class="admin-body">
+  <main class="admin-shell">
+    <section class="admin-gate" id="gate">
+      <div class="admin-gate-card">
+        <div class="kicker">GLOWSELF · INTERNAL</div>
+        <h1>运营仪表盘</h1>
+        <p>输入服务端设置的 <code>ADMIN_KEY</code>，查看测试漏斗、留资和来源。密钥只保存在本次浏览器会话中。</p>
+        <form id="gate-form">
+          <input type="text" name="username" autocomplete="username" value="admin" hidden>
+          <label class="field-label" for="admin-key">管理密钥</label>
+          <input class="field" id="admin-key" name="key" type="password" autocomplete="current-password" placeholder="ADMIN_KEY" required>
+          <button class="btn btn-accent" type="submit">进入仪表盘 →</button>
+          <p class="admin-error" id="gate-error" hidden>密钥错误，或服务端未设置 ADMIN_KEY。</p>
+        </form>
+        <a class="admin-back" href="/">← 返回站点</a>
+      </div>
+    </section>
+
+    <section class="admin-dashboard" id="dashboard" hidden>
+      <header class="admin-top">
+        <a class="brand" href="/"><img class="brand-mark" src="/assets/img/mark.svg" alt=""><span><span class="brand-name">光绽 GlowSelf</span><span class="brand-en">OPERATIONS</span></span></a>
+        <div class="admin-actions">
+          <span class="admin-live" id="updated">—</span>
+          <select class="field admin-select" id="range" aria-label="时间范围">
+            <option value="7">近 7 天</option>
+            <option value="30">近 30 天</option>
+            <option value="90">近 90 天</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" id="refresh" type="button">刷新</button>
+          <button class="btn btn-ghost btn-sm" id="signout" type="button">退出</button>
+        </div>
+      </header>
+
+      <div class="admin-heading">
+        <div><div class="kicker">FUNNEL · CONTENT · LEADS</div><h1>今天，谁在测，谁在留。</h1></div>
+        <p>只统计匿名事件与用户主动提交的邮箱；不展示完整邮箱。移动端以测试和分享为主，桌面端更常进入空间。</p>
+      </div>
+
+      <div class="metric-grid" id="metrics"></div>
+
+      <div class="admin-two">
+        <section class="admin-card">
+          <div class="admin-card-head"><h2>转化漏斗</h2><span class="tiny">相对页面浏览</span></div>
+          <div class="funnel" id="funnel"></div>
+        </section>
+        <section class="admin-card">
+          <div class="admin-card-head"><h2>每日事件</h2><span class="tiny" id="range-label">近 7 天</span></div>
+          <div class="day-chart" id="day-chart"></div>
+        </section>
+      </div>
+
+      <div class="admin-three">
+        <section class="admin-card"><div class="admin-card-head"><h2>季节分布</h2></div><div class="rank-list" id="top-seasons"></div></section>
+        <section class="admin-card"><div class="admin-card-head"><h2>风格分布</h2></div><div class="rank-list" id="top-styles"></div></section>
+        <section class="admin-card"><div class="admin-card-head"><h2>来源</h2></div><div class="rank-list" id="top-referrers"></div></section>
+        <section class="admin-card"><div class="admin-card-head"><h2>活动归因</h2><span class="tiny">UTM 首次触点</span></div><div class="rank-list" id="top-campaigns"></div></section>
+      </div>
+
+      <section class="admin-card">
+        <div class="admin-card-head"><h2>最近留资</h2><span class="tiny">邮箱已脱敏 · 最多 30 条</span></div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>时间</th><th>邮箱</th><th>意图</th><th>来源</th><th>季节</th></tr></thead>
+            <tbody id="leads-body"></tbody>
+          </table>
+        </div>
+        <p class="admin-empty" id="leads-empty" hidden>这个时间段还没有留资。</p>
+      </section>
+
+      <p class="admin-foot">数据来自 <code>data/events.ndjson</code> 与 <code>data/leads.ndjson</code>。上线后建议接入 Umami 或 Plausible 做长期看板。</p>
+    </section>
+  </main>
+  <script src="/assets/js/data.js"></script>
+  <script src="/assets/js/admin.js"></script>
+</body>
+</html>
