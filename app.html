@@ -7,6 +7,13 @@
   <meta name="description" content="你的每日 look、衣橱、30 天形象计划和色彩 DNA 报告。">
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#f6f1e8">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="GlowSelf">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="stylesheet" href="/assets/css/site.css">
 </head>
 <body class="app-body">
@@ -69,6 +76,13 @@
         </div>
 
         <div id="app-ready" hidden>
+          <div class="install-strip" id="install-strip" hidden>
+            <div><b>把 GlowSelf 放到主屏幕</b><span>明天打开就是今天的 look，不用再找链接。</span></div>
+            <div class="install-actions">
+              <button class="btn btn-primary btn-sm" id="install-strip-btn" type="button">安装</button>
+              <button class="install-x" type="button" data-dismiss-install aria-label="稍后再说">×</button>
+            </div>
+          </div>
           <section class="panel" data-panel="today">
             <div class="greeting">
               <div>
@@ -186,7 +200,10 @@
               <div class="bar" style="margin-bottom:18px"><span id="plan-bar-2"></span></div>
               <div class="plan-grid" id="plan-grid"></div>
             </div>
-            <p class="form-note" style="margin-top:14px">点击任意一天标记完成。计划会根据你的色彩 DNA 和风格坐标生成。</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px">
+              <p class="form-note" style="margin:0">点击任意一天标记完成。计划会根据你的色彩 DNA 和风格坐标生成。</p>
+              <button class="btn btn-ghost btn-sm" id="export-ics" type="button">导出到日历 .ics</button>
+            </div>
           </section>
 
           <section class="panel" data-panel="settings" hidden>
@@ -206,6 +223,12 @@
                 <p style="font-size:12px;color:var(--muted);line-height:1.8">你正在体验 Plus 的全部能力。正式收费前会再次确认，不会自动扣款。</p>
                 <button class="btn btn-accent btn-sm" style="margin-top:12px" data-open-unlock="app_settings">了解 Plus</button>
               </div>
+            </div>
+            <div class="dash-card" id="install-card" style="margin-top:16px" hidden>
+              <div class="card-head"><div><div class="k">ON YOUR HOME SCREEN</div><h3>把 GlowSelf 放在主屏幕</h3></div><span class="tiny">更快一步</span></div>
+              <p style="font-size:12px;color:var(--muted);line-height:1.8">明天打开就是今天的 look，不用再找链接。报告和衣橱仍然只存在这台设备上。</p>
+              <button class="btn btn-primary btn-sm" id="install-app" type="button" style="margin-top:12px" hidden>安装到主屏幕</button>
+              <p class="form-note" id="install-hint" style="margin-top:10px"></p>
             </div>
             <div class="dash-card" style="margin-top:16px">
               <div class="card-head"><div><div class="k">PRIVACY</div><h3>导出或删除</h3></div></div>

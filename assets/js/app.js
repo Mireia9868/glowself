@@ -23,6 +23,104 @@
   function dayName(d) { return '日一二三四五六'[d.getDay()]; }
   function shortDate(d) { return (d.getMonth() + 1) + '月' + d.getDate() + '日'; }
   function hash(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+  function icsEscape(text) {
+    return String(text).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+  }
+  function icsStamp() { return new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); }
+
+  function exportPlanICS() {
+    if (!result) { UI.toast('先完成测试，再生成日历'); return; }
+    var lines = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//GlowSelf//30 Day Plan//ZH',
+      'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:GlowSelf 30 天形象计划'
+    ];
+    var stamp = icsStamp();
+    for (var i = 0; i < 30; i++) {
+      var d = addDays(new Date(), i);
+      var day = iso(d).replace(/-/g, '');
+      var look = buildLook(d, 0);
+      var desc = look.sub + '\n颜色：' + look.colors.join(' / ') + '\n打开：https://glowself.cn/app.html';
+      lines.push('BEGIN:VEVENT');
+      lines.push('UID:glow-' + day + '-' + result.seasonId + '@glowself.cn');
+      lines.push('DTSTAMP:' + stamp);
+      lines.push('DTSTART:' + day + 'T000000Z');
+      lines.push('DTEND:' + day + 'T001500Z');
+      lines.push('SUMMARY:' + icsEscape('今日 look｜' + look.title));
+      lines.push('DESCRIPTION:' + icsEscape(desc));
+      lines.push('URL:https://glowself.cn/app.html');
+      lines.push('BEGIN:VALARM', 'TRIGGER:-PT15M', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEscape('今天的 look 已准备好'), 'END:VALARM');
+      lines.push('END:VEVENT');
+    }
+    lines.push('END:VCALENDAR');
+    var blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'GlowSelf-30天计划.ics';
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    UI.track('plan_ics_export', { days: 30, seasonId: result.seasonId });
+    UI.toast('日历文件已生成，导入后每天 08:00 提醒');
+  }
+
+  var deferredInstall = null;
+  var INSTALL_DISMISS = 'glow_install_dismissed';
+
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+  function installDismissed() {
+    try { return localStorage.getItem(INSTALL_DISMISS) === '1'; } catch (e) { return false; }
+  }
+  function showInstallUI(ios) {
+    if (isStandalone() || !UI.getResult()) return;
+    var strip = $('install-strip'), card = $('install-card'), btn = $('install-app'), hint = $('install-hint'), stripBtn = $('install-strip-btn');
+    if (strip && !installDismissed()) strip.hidden = false;
+    if (card) card.hidden = false;
+    if (stripBtn) stripBtn.hidden = !!ios || !deferredInstall;
+    if (btn) btn.hidden = !!ios || !deferredInstall;
+    if (hint) hint.textContent = ios ? '在 Safari 点底部「分享」→「添加到主屏幕」。' : (deferredInstall ? '安装后从主屏幕直接打开，像一个小 App。' : '');
+  }
+  function promptInstall() {
+    if (!deferredInstall) { UI.toast('请用浏览器菜单里的「安装应用 / 添加到主屏幕」'); return; }
+    deferredInstall.prompt();
+    deferredInstall.userChoice.then(function (choice) {
+      UI.track('pwa_install', { outcome: choice.outcome });
+      if (choice.outcome === 'accepted') {
+        ['install-strip', 'install-card'].forEach(function (id) { var el = $(id); if (el) el.hidden = true; });
+        UI.toast('已添加到主屏幕');
+      }
+      deferredInstall = null;
+    });
+  }
+  function initInstallUI() {
+    var strip = $('install-strip');
+    if (strip) {
+      var dismiss = strip.querySelector('[data-dismiss-install]');
+      if (dismiss) dismiss.addEventListener('click', function () {
+        try { localStorage.setItem(INSTALL_DISMISS, '1'); } catch (e) {}
+        strip.hidden = true;
+        UI.track('pwa_install_dismiss');
+      });
+    }
+    ['install-app', 'install-strip-btn'].forEach(function (id) {
+      var btn = $(id);
+      if (btn) btn.addEventListener('click', promptInstall);
+    });
+    if (!isStandalone() && /iphone|ipad|ipod/i.test(navigator.userAgent)) showInstallUI(true);
+  }
+
+  window.addEventListener('appinstalled', function () {
+    ['install-strip', 'install-card'].forEach(function (id) { var el = $(id); if (el) el.hidden = true; });
+    UI.track('pwa_installed');
+  });
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    // no result: let the browser show its native install banner
+    if (!UI.getResult()) return;
+    e.preventDefault();
+    deferredInstall = e;
+    showInstallUI(false);
+  });
 
   var sceneTags = ['通勤', '见朋友', '周末', '约会', '出差', '居家', '重要场合'];
 
@@ -290,6 +388,7 @@
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
       UI.track('data_export');
     });
+    $('export-ics').addEventListener('click', exportPlanICS);
     $('delete-data').addEventListener('click', function () {
       if (!confirm('删除后会清空本机的报告、衣橱和计划，且无法恢复。继续？')) return;
       ['glow_result_v2', KEY.wardrobe, KEY.plan, KEY.saved, KEY.email, 'glow_session_id'].forEach(function (k) { localStorage.removeItem(k); });
@@ -302,6 +401,7 @@
   }
 
   function init() {
+    initInstallUI();
     result = UI.getResult();
     setGreeting();
     if (!result || !result.season || !result.archetype) {

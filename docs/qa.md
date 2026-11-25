@@ -8,7 +8,7 @@
 
 ```bash
 node scripts/check.js
-# checked 41 html files, 109 total files
+# checked 42 html files, 118 total files
 # warn /404.html: no og:image
 # warn /app.html: no og:image
 # ok — links, meta, data and assets are consistent
@@ -53,6 +53,9 @@ node scripts/check.js
 | 身材索引 | `/article/body-shape-guide.html` 5 张卡片，链接均有效 |
 | 运营仪表盘 | 未登录显示密钥门；正确 `ADMIN_KEY` 后显示 6 个指标、漏斗、每日柱状图、分布与脱敏留资；错误密钥回显错误 |
 | 仪表盘移动端 | 390px 两列指标，表格可横向滚动 |
+| PWA 可安装性 | `Page.getAppManifest` 无错误；`Page.getInstallabilityErrors` 为空；manifest icons / start_url 可解析 |
+| 离线打开 | 断网后 `/app.html` 仍加载，标题正确，`#app-ready` 可见；Service Worker scope 为 `/` |
+| 日历导出 | 点击「导出到日历 .ics」下载 30 个 `VEVENT`，含每日 look、颜色、URL 和 15 分钟提醒 |
 | 横向溢出 | 结果页 390px 下 `scrollWidth=390`，无横向滚动 |
 
 ## 截图
@@ -80,6 +83,9 @@ node scripts/check.js
 | `docs/screenshots/admin-gate.png` | 运营仪表盘密钥门 1440 |
 | `docs/screenshots/admin-desktop.png` | 运营仪表盘 1440（演示数据） |
 | `docs/screenshots/admin-mobile.png` | 运营仪表盘 390（演示数据） |
+| `docs/screenshots/app-install-desktop.png` | 设置页 PWA 安装入口 1440 |
+| `docs/screenshots/app-install-mobile.png` | 设置页 PWA 安装入口 390 |
+| `docs/screenshots/app-plan-ics-desktop.png` | 30 天计划 + 日历导出 1440 |
 
 ## 已知边界（不阻塞内测）
 
@@ -88,6 +94,8 @@ node scripts/check.js
 3. 结果由规则引擎生成，不是 AI 视觉分析；文案已去掉「AI 分析」承诺。
 4. 邮箱报告目前只落线索，没有真正发信；需接 Resend/阿里云邮件。
 5. JSONL 埋点适合 0–10k DAU；超过后换 Postgres/ClickHouse。
+6. PWA 的 iOS 安装依赖 Safari「分享 → 添加到主屏幕」，没有自动安装横幅；Android/桌面 Chrome 才会出现原生安装事件。
+7. 日历提醒使用 UTC 时间写入，按北京时间 08:00 触发；非中国时区用户看到的是当地对应时间。
 6. 移动端整页截图里固定底栏会压在内容上，这是截图工具对 `position:fixed` 的呈现；真机滚动时底栏固定，内容已留 90px 底部安全区。
 7. 404/app 不设 OG，因为 noindex。
 

@@ -70,8 +70,28 @@ else {
 }
 
 // generated assets
-for (const p of ['assets/img/og-cover.png', 'assets/img/favicon.svg', 'assets/img/mark.svg', 'assets/css/site.css', 'server.js']) {
+for (const p of ['assets/img/og-cover.png', 'assets/img/favicon.svg', 'assets/img/mark.svg', 'assets/css/site.css', 'server.js', 'manifest.webmanifest', 'sw.js', 'offline.html', 'assets/img/icon-192.png', 'assets/img/icon-512.png', 'assets/img/icon-maskable-512.png']) {
   if (!fs.existsSync(path.join(ROOT, p))) errors.push(`missing ${p}`);
+}
+try {
+  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.webmanifest'), 'utf8'));
+  if (!manifest.name || !manifest.start_url || manifest.display !== 'standalone') errors.push('manifest: name/start_url/display missing');
+  for (const icon of manifest.icons || []) {
+    const iconPath = path.join(ROOT, icon.src);
+    if (!fs.existsSync(iconPath)) errors.push(`manifest: missing icon ${icon.src}`);
+  }
+} catch (e) { errors.push(`manifest: invalid JSON (${e.message})`); }
+const sw = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
+const shellMatch = sw.match(/const SHELL = \[([\s\S]*?)\];/);
+if (!shellMatch) errors.push('sw.js: SHELL missing');
+else {
+  for (const m of shellMatch[1].matchAll(/'([^']+)'/g)) {
+    const target = path.join(ROOT, m[1] === '/' ? 'index.html' : m[1]);
+    if (!fs.existsSync(target)) errors.push(`sw.js: missing precache ${m[1]}`);
+  }
+}
+for (const p of ['app.html', 'index.html']) {
+  if (!/rel="manifest"/.test(fs.readFileSync(path.join(ROOT, p), 'utf8'))) errors.push(`${p}: missing manifest link`);
 }
 const og = path.join(ROOT, 'assets/img/og');
 if (!fs.existsSync(og) || fs.readdirSync(og).filter(f => f.endsWith('.png')).length !== 12) {

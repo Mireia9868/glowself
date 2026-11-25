@@ -13,6 +13,7 @@
 | 动态结果页 / 分享卡 | ✅ 完成 |
 | 分享页 `/r/:season/:style` + 动态 OG | ✅ 完成 |
 | 个人空间（今日 look / DNA / 衣橱 / 30 天计划 / 设置） | ✅ 完成（本地存储） |
+| PWA 安装 / 离线打开 / 日历导出 | ✅ 完成（`manifest.webmanifest` + `sw.js`） |
 | 定价页 / 内测申请 | ✅ 完成 |
 | 4 篇 SEO 文章 + 7 种脸型指南 + 5 种身材指南 + 文章中心 | ✅ 完成 |
 | 12 季色彩 SEO 落地页 + 图鉴 | ✅ 完成 |
@@ -53,6 +54,9 @@ glowself/
 ├── result.html                结果页（动态渲染）
 ├── app.html                   个人空间（今日 / DNA / 衣橱 / 计划 / 设置）
 ├── admin.html                 运营仪表盘（noindex，需要 ADMIN_KEY）
+├── manifest.webmanifest       PWA 安装信息
+├── sw.js                      离线缓存（应用壳）
+├── offline.html               离线兜底页
 ├── pricing.html               Free / Plus / Pro
 ├── about.html privacy.html terms.html 404.html
 ├── article/                   4 篇文章 + 7 种脸型指南 + 5 种身材指南 + 文章中心
@@ -65,7 +69,7 @@ glowself/
 │   ├── js/result.js           结果渲染 + 1080×1350 分享卡
 │   ├── js/app.js              每日 look / 衣橱 / 30 天计划
 │   ├── js/admin.js            仪表盘请求与渲染
-│   └── img/                   logo、favicon、og-cover、12 季 OG
+│   └── img/                   logo、favicon、PWA 图标、og-cover、12 季 OG
 ├── data/                      events.ndjson / leads.ndjson / seasons.json
 ├── model/                     财务模型 + 生成脚本
 ├── growth/                    增长策略 + 上线手册
@@ -131,6 +135,13 @@ DATA_DIR=./data
 LEADS_WEBHOOK_URL=<飞书/企微 webhook>
 LOG_REQUESTS=1
 ```
+
+## PWA 与日历
+
+- 手机浏览器打开 `/app.html`，设置页会出现「安装到主屏幕」；iOS Safari 用「分享 → 添加到主屏幕」。
+- `sw.js` 只缓存应用壳（页面、样式、脚本），不缓存报告、邮箱和衣橱数据；离线仍可打开 `/app.html`。
+- 30 天计划可导出 `.ics`，日历每天 08:00（北京时间）提醒，含 15 分钟提前通知。
+- 发布新版本时把 `sw.js` 的 `CACHE` 版本号加一，避免用户拿到旧脚本。
 
 ## 运营仪表盘
 

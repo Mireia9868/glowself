@@ -33,6 +33,8 @@
 | `lead_submitted` | 提交内测 | 线索 |
 | `app_view` | 个人空间 | 留存 |
 | `wardrobe_add` / `plan_toggle` / `app_look_save` | 衣橱 / 计划 / 收藏 | 深度使用 |
+| `plan_ics_export` | 导出 30 天日历 | 留存意图 |
+| `pwa_install` | 从浏览器安装到主屏幕 | 留存质量 |
 
 ## 运营仪表盘
 

@@ -1,0 +1,23 @@
+{
+  "id": "/",
+  "name": "光绽 GlowSelf",
+  "short_name": "GlowSelf",
+  "description": "不评分的色彩与风格说明书：11 个问题找到色彩 DNA，每天一套能照着穿的 look。",
+  "lang": "zh-CN",
+  "start_url": "/app.html?utm_source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f1e8",
+  "theme_color": "#f6f1e8",
+  "categories": ["lifestyle", "shopping"],
+  "icons": [
+    { "src": "/assets/img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/img/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "免费测色彩", "short_name": "测一测", "url": "/test.html", "icons": [{ "src": "/assets/img/icon-192.png", "sizes": "192x192" }] },
+    { "name": "我的空间", "short_name": "我的空间", "url": "/app.html", "icons": [{ "src": "/assets/img/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
