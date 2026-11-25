@@ -964,3 +964,17 @@ body.nav-open .nav-toggle span::after { top: 0; transform: rotate(-45deg); }
 .install-x { width: 26px; height: 26px; border: 0; background: transparent; color: var(--muted-2); font-size: 17px; line-height: 1; cursor: pointer; }
 .install-x:hover { color: var(--ink); }
 @media (max-width: 620px) { .install-strip { align-items: flex-start; padding: 12px; } .install-strip span { padding-right: 8px; } }
+
+/* quiz mobile: get to the first question fast */
+@media (max-width: 620px) {
+  .quiz-nav .brand-en { display: none; }
+  .quiz-nav .brand-name { font-size: 14px; }
+  .quiz-progress-top { flex: 1; justify-content: flex-end; gap: 8px; letter-spacing: .06em; }
+  .quiz-progress-top #progress-text { white-space: nowrap; }
+  .quiz-progress-top #progress-label { display: none; }
+  .quiz-progress-top .progress-track { width: 46px; }
+  .quiz-nav .btn-sm { padding: 7px 10px; font-size: 10px; }
+  .quiz-aside { display: none; }
+  .quiz-main { grid-template-columns: 1fr; min-height: calc(100vh - 60px); }
+  .quiz-content { max-width: none; justify-content: flex-start; padding-top: 30px; }
+}

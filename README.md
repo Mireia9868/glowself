@@ -209,6 +209,8 @@ npm run check
 
 ## 文档
 
+- [生产环境状态](docs/production.md)
+
 - [增长策略](growth/strategy.md)
 - [上线手册](growth/launch.md)
 - [部署](docs/deployment.md)

@@ -6,6 +6,7 @@
 
 - [calendar.md](calendar.md) — 30 天发布排期，按周主题、平台、形式、钩子、CTA 排好
 - [notes.md](notes.md) — 6 篇完整小红书笔记（标题、封面字、正文、标签、首评、配图）
+- [covers/](covers/) — 6 张 1080×1440 封面 PNG，直接对应 note01–note06
 - [video-scripts.md](video-scripts.md) — 5 条 30–45 秒短视频脚本（分镜、口播、字幕）
 - [comment-playbook.md](comment-playbook.md) — 12 个高频质疑的回复口径
 - [budget.md](budget.md) — ¥25k/月渠道预算、CAC 上限和停止条件
@@ -20,6 +21,7 @@ https://glowself.cn/test.html?utm_source=<平台>&utm_medium=social&utm_campaign
 
 | 内容 | 链接 |
 |---|---|
+| 封面 | `covers/note01.png` – `covers/note06.png` |
 | 小红书 note01 | `https://glowself.cn/test.html?utm_source=xiaohongshu&utm_medium=social&utm_campaign=note01&utm_content=cover_a` |
 | 小红书 note02 | `https://glowself.cn/test.html?utm_source=xiaohongshu&utm_medium=social&utm_campaign=note02&utm_content=cover_a` |
 | 小红书 note03 | `https://glowself.cn/test.html?utm_source=xiaohongshu&utm_medium=social&utm_campaign=note03&utm_content=cover_a` |
