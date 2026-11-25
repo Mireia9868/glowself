@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>免费色彩 DNA 测试｜GlowSelf 光绽</title>
+  <meta name="description" content="11 个问题，约 2 分 30 秒，测出你的 12 季色彩类型、风格原型和专属配色。不用注册，不用上传照片。">
+  <link rel="canonical" href="https://glowself.cn/test.html">
+  <meta property="og:title" content="3 分钟测出你的色彩与风格｜GlowSelf">
+  <meta property="og:description" content="不用注册，不用拍照。11 个问题，拿到你的色彩 DNA 和风格坐标。">
+  <meta property="og:image" content="https://glowself.cn/assets/img/og-cover.png">
+  <meta name="robots" content="index,follow">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body class="quiz-body">
+  <header class="quiz-nav">
+    <div class="shell nav">
+      <a class="brand" href="/" aria-label="返回 GlowSelf 首页">
+        <img class="brand-mark" src="/assets/img/mark.svg" alt="">
+        <span><span class="brand-name">光绽 GlowSelf</span><span class="brand-en">COLOUR DNA TEST</span></span>
+      </a>
+      <div class="quiz-progress-top" aria-live="polite">
+        <span id="progress-text">01 / 11</span>
+        <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+        <span id="progress-label">肤色</span>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="/" aria-label="退出测试">退出</a>
+    </div>
+  </header>
+
+  <main class="quiz-main">
+    <aside class="quiz-aside">
+      <div>
+        <div class="kicker">PERSONAL COLOUR DNA</div>
+        <h1>找到你的<br>本命色。</h1>
+        <p>不是给你一个分数，是告诉你：什么颜色让你显气色，什么轮廓让你更自在。凭第一直觉选，答案没有对错。</p>
+        <div class="quiz-aside-quote">“你不需要变成另一个人。你只需要知道，什么本来就适合你。”</div>
+      </div>
+      <div class="quiz-aside-foot"><span class="dot"></span>约 2 分 30 秒 · 不用注册 · 不用拍照</div>
+      <div class="quiz-visual" aria-hidden="true">
+        <div class="quiz-orbit"></div><div class="quiz-orbit two"></div><div class="quiz-orbit three"></div>
+      </div>
+    </aside>
+
+    <section class="quiz-content" aria-live="polite">
+      <form id="quiz-form" novalidate>
+        <div id="quiz-steps"></div>
+
+        <div class="quiz-controls">
+          <button class="quiz-back" type="button" id="quiz-back" hidden>← 上一题</button>
+          <span class="quiz-keyhint">按 1–9 选择 · Enter 继续</span>
+          <button class="btn btn-accent quiz-next" type="button" id="quiz-next" disabled>继续 →</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="/assets/js/data.js" defer></script>
+  <script src="/assets/js/site.js" defer></script>
+  <script src="/assets/js/test.js" defer></script>
+</body>
+</html>

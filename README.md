@@ -1,0 +1,169 @@
+# 光绽 GlowSelf v2
+
+> 不评分的色彩与风格说明书。11 个问题，3 分钟，找到你的色彩 DNA 与风格坐标；再用每日 look、衣橱和 30 天计划把它穿出来。
+
+这是 `glowself.cn` 的 v2 重构版：从「登录 + 上传人脸 + 颜值评分 + 手动支付宝」转向「免注册免费测试 + 可分享结果 + 订阅制个人造型工具」。
+
+## 当前状态
+
+| 模块 | 状态 |
+|---|---|
+| 品牌落地页 | ✅ 完成 |
+| 11 题免费测试 | ✅ 完成 |
+| 动态结果页 / 分享卡 | ✅ 完成 |
+| 分享页 `/r/:season/:style` + 动态 OG | ✅ 完成 |
+| 个人空间（今日 look / DNA / 衣橱 / 30 天计划 / 设置） | ✅ 完成（本地存储） |
+| 定价页 / 内测申请 | ✅ 完成 |
+| 4 篇 SEO 文章 + 文章中心 | ✅ 完成 |
+| 关于 / 隐私 / 条款 / 404 | ✅ 完成 |
+| 事件 / 线索 API | ✅ 完成（JSONL 落盘） |
+| 财务模型 | ✅ `model/GlowSelf-Financial-Model.xlsx` |
+| 增长 / 上线手册 | ✅ `growth/strategy.md`、`growth/launch.md` |
+| 账号体系 / 支付 / 跨设备同步 | ⏳ 内测后接入 |
+| 部署到 glowself.cn | ⏳ 需要域名 / Render / Cloudflare 权限 |
+
+## 快速开始
+
+```bash
+node server.js
+# http://127.0.0.1:4173
+```
+
+零依赖，Node >= 20。不要用 `python -m http.server`，否则 `/api/events`、分享 OG、sitemap 都不可用。
+
+```bash
+npm start        # 生产启动
+npm run dev      # PORT=4173
+npm run check    # 静态检查：链接、meta、数据、资源
+```
+
+## 目录
+
+```
+glowself/
+├── index.html                 品牌首页
+├── test.html                  11 题测试
+├── result.html                结果页（动态渲染）
+├── app.html                   个人空间（今日 / DNA / 衣橱 / 计划 / 设置）
+├── pricing.html               Free / Plus / Pro
+├── about.html privacy.html terms.html 404.html
+├── article/                   4 篇 SEO 文章 + 文章中心
+├── assets/
+│   ├── css/site.css           编辑风设计系统
+│   ├── js/data.js             12 季 / 6 风格 / 5 身型 / 11 题 / analyze()
+│   ├── js/site.js             UI、埋点、线索、分享、计费切换
+│   ├── js/test.js             测试交互
+│   ├── js/result.js           结果渲染 + 1080×1350 分享卡
+│   ├── js/app.js              每日 look / 衣橱 / 30 天计划
+│   └── img/                   logo、favicon、og-cover、12 季 OG
+├── data/                      events.ndjson / leads.ndjson / seasons.json
+├── model/                     财务模型 + 生成脚本
+├── growth/                    增长策略 + 上线手册
+├── scripts/                   build_articles.py / build_pages.py / build_og.py / check.js
+├── docs/                      部署、分析、决策记录
+├── server.js                  Node HTTP 服务
+├── package.json
+└── render.yaml
+```
+
+## 产品逻辑
+
+### 测试
+- 11 题：肤色深浅、冷暖、金属、发色、眼睛、色板偏好、对比度、面部特征、身型、目标、风格；
+- `GLOW.analyze(answers)` 返回 `{seasonId, styleId, scores, season, archetype, body, goal, secondary}`；
+- 12 季：柔暖秋 / 暖秋 / 深暖秋 / 浅春 / 暖春 / 亮春 / 柔夏 / 冷夏 / 浅夏 / 净冬 / 冷冬 / 深冬；
+- 6 风格：温婉优雅 / 清冷知性 / 甜酷灵动 / 自然松弛 / 复古文艺 / 极简现代；
+- 5 身型：X / H / A / O / Y；
+- 结果不做分数、不做排名、不做「变美承诺」。
+
+### 分享
+- 结果页生成 1080×1350 PNG；
+- 分享链接：`/r/<seasonId>/<styleId>?g=<goal>&b=<body>&ref=<uid>`；
+- 服务端为每个分享页注入 `title` / `description` / `canonical` / `og:*`；
+- 分享页打开后隐藏付费/邮箱卡片，只保留「测测我的」CTA；
+- `ref` 是匿名邀请码，落在事件 `props.ref` 里，用于计算邀请转化。
+
+### 数据
+- 默认全部在浏览器 localStorage：`glow_result_v2`、`glow_wardrobe_v1`、`glow_plan_v1`、`glow_uid`、`glow_ref`；
+- 不上传人脸照片；v2 不需要登录；
+- 事件匿名（sessionId / uid / path / referrer / IP / UA），用于漏斗分析；
+- 线索只收集邮箱 + 意图，用于内测通知。
+
+## API
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/health` | 健康检查 + 版本 |
+| POST | `/api/events` | `{name, props, sessionId, path, referrer}` |
+| POST | `/api/leads` | `{email, intent, source, result, message}` |
+| GET | `/api/stats?key=<ADMIN_KEY>&days=7` | 事件/线索聚合 |
+| GET | `/r/:season/:style` | 分享页 + 动态 OG |
+| GET | `/robots.txt` `/sitemap.xml` | SEO |
+
+环境变量：
+
+```bash
+PORT=4173
+ADMIN_KEY=<32 位随机串>
+DATA_DIR=./data
+LEADS_WEBHOOK_URL=<飞书/企微 webhook>
+LOG_REQUESTS=1
+```
+
+## 部署
+
+见 `docs/deployment.md`。最短路径：
+
+1. GitHub 推仓库；
+2. Render Web Service，Start Command `node server.js`；
+3. 挂 Disk `/var/data`，设 `DATA_DIR=/var/data`、`ADMIN_KEY`；
+4. 绑定 `glowself.cn`，Cloudflare 代理；
+5. 验证 `/api/health`、`/robots.txt`、`/sitemap.xml`、分享页 OG。
+
+## 测试
+
+```bash
+npm run check
+```
+
+检查项：
+- 所有内部链接 / 资源存在；
+- 每页有 title / description / canonical；
+- 结果页 noindex、分享页可索引；
+- 12 季数据完整（12 色、3 公式、lip/blush/eye/hair）；
+- 11 题、6 风格、5 身型；
+- OG 图存在；
+- 没有遗留 `localhost` / `example.com`。
+
+浏览器手测清单见 `docs/qa.md`。
+
+## 已知边界
+
+- 个人空间是本地存储，换设备不同步；账号体系在 v3；
+- 支付未接入，所有升级 CTA 是「内测申请」，不收款；
+- AI 视觉分析未接入；v2 用规则引擎，可解释、可审计；
+- 衣橱图片识别未做，先手动录入；
+- 事件用 JSONL，适合 0–10k DAU；超过 10k 后换 Postgres/ClickHouse；
+- 当前无短信/微信登录。
+
+## 下一步（按优先级）
+
+1. 部署 + 真机验收 + 分享 OG 实测；
+2. 20 位种子用户访谈，校准 12 季结果准确性；
+3. 接入邮箱服务（Resend / 阿里云邮件）真正发报告；
+4. 接入 Stripe / 支付宝（内测预售 → 正式订阅）；
+5. 账号体系 + 跨设备同步；
+6. 邀请奖励自动化；
+7. 30 篇 SEO 长尾 + 小红书日更；
+8. 造型师 Pro 服务履约 SOP。
+
+## 文档
+
+- [增长策略](growth/strategy.md)
+- [上线手册](growth/launch.md)
+- [部署](docs/deployment.md)
+- [数据分析](docs/analytics.md)
+- [决策记录](docs/decisions.md)
+- [验收记录](docs/qa.md)
+- [界面截图](docs/screenshots/)
+- [财务模型](model/GlowSelf-Financial-Model.xlsx)

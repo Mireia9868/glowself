@@ -1,0 +1,62 @@
+{
+  "soft-autumn": {
+    "name": "柔暖秋",
+    "en": "Soft Autumn",
+    "tagline": "像一杯加了燕麦奶的拿铁，柔和、耐看、有温度。"
+  },
+  "warm-autumn": {
+    "name": "暖秋",
+    "en": "Warm Autumn",
+    "tagline": "像秋日午后的香料市集，浓郁、温暖、有存在感。"
+  },
+  "deep-autumn": {
+    "name": "深暖秋",
+    "en": "Deep Autumn",
+    "tagline": "像深秋的森林与红酒，沉静、浓郁、有力量。"
+  },
+  "light-spring": {
+    "name": "浅春",
+    "en": "Light Spring",
+    "tagline": "像刚切开的蜜桃与清晨的奶油，轻盈、透亮、柔软。"
+  },
+  "warm-spring": {
+    "name": "暖春",
+    "en": "Warm Spring",
+    "tagline": "像刚好的阳光，明亮、鲜活、有生命力。"
+  },
+  "clear-spring": {
+    "name": "亮春",
+    "en": "Clear Spring",
+    "tagline": "像一束打在高饱和色板上的光，鲜明、利落、抓眼。"
+  },
+  "soft-summer": {
+    "name": "柔夏",
+    "en": "Soft Summer",
+    "tagline": "像一场有雾的清晨，安静、克制、耐人寻味。"
+  },
+  "cool-summer": {
+    "name": "冷夏",
+    "en": "Cool Summer",
+    "tagline": "像海水漫过石头，清冷、通透、有距离感。"
+  },
+  "light-summer": {
+    "name": "浅夏",
+    "en": "Light Summer",
+    "tagline": "像被水洗过的花瓣，轻盈、干净、透明。"
+  },
+  "clear-winter": {
+    "name": "净冬",
+    "en": "Clear Winter",
+    "tagline": "像黑夜里的一束冷光，干净、锐利、过目不忘。"
+  },
+  "cool-winter": {
+    "name": "冷冬",
+    "en": "Cool Winter",
+    "tagline": "像深冬的宝石，冷冽、浓郁、有质感。"
+  },
+  "deep-winter": {
+    "name": "深冬",
+    "en": "Deep Winter",
+    "tagline": "像一杯深色红酒，浓烈、神秘、有掌控感。"
+  }
+}

@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: glowself
+    runtime: node
+    plan: starter
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: ADMIN_KEY
+        generateValue: true
+      - key: DATA_DIR
+        value: /var/data
+      - key: LEADS_WEBHOOK_URL
+        sync: false
+    disk:
+      name: glowself-data
+      mountPath: /var/data
+      sizeGB: 1
