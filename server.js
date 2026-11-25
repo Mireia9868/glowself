@@ -495,6 +495,8 @@ function sitemapXml() {
 
 async function serveStatic(req, res, pathname) {
   let rel = decodeURIComponent(pathname);
+  const BLOCKED = ['/server.js', '/package.json', '/package-lock.json', '/render.yaml', '/Procfile', '/.env', '/.git', '/docs/', '/growth/', '/model/', '/scripts/', '/data/events.ndjson', '/data/leads.ndjson'];
+  if (BLOCKED.some(p => rel === p || rel.startsWith(p.endsWith('/') ? p : p + '/'))) return send404(res);
   if (rel === '/') rel = '/index.html';
   const abs = path.resolve(ROOT, '.' + rel);
   if (!abs.startsWith(ROOT + path.sep)) return sendJson(res, 403, { ok: false, error: 'forbidden' });
@@ -518,6 +520,13 @@ async function serveStatic(req, res, pathname) {
     }
   }
   return serveFile(req, res, abs, stat);
+}
+
+function send404(res) {
+  return fsp.readFile(path.join(ROOT, '404.html'), 'utf8').then(html => {
+    res.writeHead(404, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store' });
+    res.end(html);
+  }).catch(() => sendJson(res, 404, { ok: false, error: 'not_found' }));
 }
 
 async function serveFile(req, res, abs, stat) {
