@@ -103,6 +103,12 @@ jq -r 'select(.name=="share_link_copy" or .name=="share_card_download") | .sessi
 - 事件不含姓名、手机号；邮箱只在主动提交时收集。
 
 
+## 付款事件
+
+- `checkout_view`：打开付款页。
+- `checkout_submitted`：提交付款信息（不是支付成功；需人工核对）。
+- 留资 `intent=paid_plus`，`message` 保存“首月 ¥29.90 · 支付宝订单尾号 xxxx”。
+
 ## 生产存储与后台
 
 - `ADMIN_KEY` 保护 `/admin.html` 与 `/api/stats`。
