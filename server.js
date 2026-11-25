@@ -255,7 +255,7 @@ async function dbStats(days) {
     dbQuery(`SELECT referrer, count(*)::int AS c FROM glow_events WHERE created_at >= ${dbDaysAgo()} AND referrer <> '' GROUP BY referrer`, range),
     dbQuery(`SELECT coalesce(nullif(props->'campaign'->>'source',''),'未知来源') || CASE WHEN props->'campaign'->>'campaign' IS NOT NULL THEN ' / ' || (props->'campaign'->>'campaign') ELSE '' END AS label, count(*)::int AS c FROM glow_events WHERE created_at >= ${dbDaysAgo()} AND props ? 'campaign' GROUP BY 1`, range),
     dbQuery(`SELECT intent, count(*)::int AS c FROM glow_leads WHERE created_at >= ${dbDaysAgo()} GROUP BY intent`, range),
-    dbQuery(`SELECT created_at, email, intent, source, result->>'seasonId' AS season_id FROM glow_leads WHERE created_at >= ${dbDaysAgo()} ORDER BY created_at DESC LIMIT 30`, range)
+    dbQuery(`SELECT created_at, email, intent, source, message, result->>'seasonId' AS season_id FROM glow_leads WHERE created_at >= ${dbDaysAgo()} ORDER BY created_at DESC LIMIT 30`, range)
   ]);
 
   const byName = Object.fromEntries(byNameRows.map(r => [r.name, r.c]));
@@ -293,6 +293,7 @@ async function dbStats(days) {
     email: maskEmail(l.email),
     intent: l.intent || '—',
     source: l.source || '—',
+    message: l.message || '',
     seasonId: l.season_id || '—'
   }));
 
@@ -342,7 +343,7 @@ async function handleLead(req, res) {
   const body = await readBody(req, 16384);
   const intent = cleanString(body.intent, 48);
   const email = cleanString(body.email, 200).toLowerCase();
-  const allowed = new Set(['plus_trial', 'free_report', 'result_feedback', 'account_email', 'consult', 'notify']);
+  const allowed = new Set(['plus_trial', 'paid_plus', 'free_report', 'result_feedback', 'account_email', 'consult', 'notify']);
   if (!allowed.has(intent)) return sendJson(res, 400, { ok: false, error: 'invalid_intent' });
   if (!email && intent !== 'result_feedback') return sendJson(res, 400, { ok: false, error: 'email_required' });
   if (email && !isEmail(email)) return sendJson(res, 400, { ok: false, error: 'invalid_email' });
@@ -449,6 +450,7 @@ async function handleStats(req, res, url) {
       email: maskEmail(l.email),
       intent: l.intent || '—',
       source: l.source || '—',
+      message: l.message || '',
       seasonId: (l.result && l.result.seasonId) || '—'
     }));
 
