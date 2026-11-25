@@ -19,19 +19,23 @@
 | `/sitemap.xml` / `robots.txt` | 200，季节与文章已收录 |
 | PWA | manifest 无错误、installability 无错误、SW 已激活、离线壳可用 |
 | 移动端 390px | 测试页已去掉首屏营销侧栏，第一题直接可见 |
-| 静态检查 | `node scripts/check.js` 通过：42 HTML / 124 files |
+| 静态检查 | `node scripts/check.js` 通过（42 HTML 页面） |
 
 ## 还需要在 Render 设置
 
 | 变量 | 作用 | 不设置的后果 |
 |---|---|---|
 | `ADMIN_KEY` | 保护 `/admin.html` 与 `/api/stats` | 后台返回 404，无法看漏斗/留资；**已于 2026-11-25 配置** |
-| `DATABASE_URL` | Postgres（Neon）持久化事件与留资 | 回退到临时盘 `data/*.ndjson`，重启/重部署会丢数据；**已配置** |
+| `DATABASE_URL` | Postgres（Neon）持久化事件与留资 | 回退到临时盘 `data/*.ndjson`，重启/重部署会丢数据；**已配置并验证跨部署保留** |
 | `DATA_DIR` | 可选，事件与留资落盘目录（建议 `/var/data`） | 仅在无 `DATABASE_URL` 时使用 |
 | `LEADS_WEBHOOK_URL` | 可选，把留资推到飞书/Slack | 只能后台查看 |
 | `LOG_REQUESTS` | 可选，设为 `1` 打请求日志 | 默认关闭 |
 
 生产优先写 Postgres（`glow_events` / `glow_leads`），通过 Neon SQL-over-HTTP，不增加运行时依赖；`DATABASE_URL` 不可用时回退 `data/*.ndjson`。`data/` 已被 `.gitignore` 排除。Render 免费实例没有持久磁盘，所以 **不要依赖本地文件做生产归因**。
+
+## 已验证的持久化
+
+事件与留资写入 Neon 的 `glow_events` / `glow_leads`。生产测试写入 1 条事件 + 1 条留资后，触发一次完整重部署，数据仍在；随后已删除 QA 测试行，当前生产计数为 0。
 
 ## 支付状态
 

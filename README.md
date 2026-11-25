@@ -18,13 +18,13 @@
 | 4 篇 SEO 文章 + 7 种脸型指南 + 5 种身材指南 + 文章中心 | ✅ 完成 |
 | 12 季色彩 SEO 落地页 + 图鉴 | ✅ 完成 |
 | 关于 / 隐私 / 条款 / 404 | ✅ 完成 |
-| 事件 / 线索 API | ✅ 完成（JSONL 落盘） |
+| 事件 / 线索 API | ✅ 完成（Postgres 持久化，失败回退 JSONL） |
 | 运营仪表盘 `/admin.html` | ✅ 完成（密钥门 + 漏斗 / 来源 / 活动归因 / 留资） |
 | 30 天内容增长包 | ✅ `growth/content/`（排期 / 6 篇成稿 / 5 条视频 / 评论 / 预算） |
 | 财务模型 | ✅ `model/GlowSelf-Financial-Model.xlsx` |
 | 增长 / 上线手册 | ✅ `growth/strategy.md`、`growth/launch.md` |
 | 账号体系 / 支付 / 跨设备同步 | ⏳ 内测后接入 |
-| 部署到 glowself.cn | ⏳ 需要域名 / Render / Cloudflare 权限 |
+| 部署到 glowself.cn | ✅ 2026-11-25 已上线 v2（Render 自动部署） |
 
 ## 快速开始
 
