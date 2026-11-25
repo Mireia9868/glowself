@@ -85,6 +85,11 @@ if (G && G.seasons) {
   }
 }
 
+// face-shape guides
+for (const slug of ['face-shape-guide', 'round-face', 'square-face', 'oval-face', 'long-face', 'heart-face', 'diamond-face']) {
+  if (!fs.existsSync(path.join(ROOT, 'article', slug + '.html'))) errors.push(`missing face guide /article/${slug}.html`);
+}
+
 // sitemap paths
 const server = fs.readFileSync(path.join(ROOT, 'server.js'), 'utf8');
 const sitemapMatch = server.match(/const SITEMAP = \[([\s\S]*?)\];/);

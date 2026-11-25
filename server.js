@@ -45,7 +45,14 @@ const SITEMAP = [
   '/season/light-summer.html',
   '/season/clear-winter.html',
   '/season/cool-winter.html',
-  '/season/deep-winter.html'
+  '/season/deep-winter.html',
+  '/article/face-shape-guide.html',
+  '/article/round-face.html',
+  '/article/square-face.html',
+  '/article/oval-face.html',
+  '/article/long-face.html',
+  '/article/heart-face.html',
+  '/article/diamond-face.html'
 ];
 
 const MIME = {

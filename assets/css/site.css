@@ -869,3 +869,19 @@ body.nav-open .nav-toggle span::after { top: 0; transform: rotate(-45deg); }
   .season-en { display: none; }
   .season-side-card { display: none; }
 }
+
+/* shared callout outside article bodies */
+.callout { margin: 26px 0; padding: 22px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+.callout b { font-family: var(--serif); font-size: 18px; font-weight: 500; }
+.callout p { font-size: 12px; line-height: 1.7; color: var(--muted); margin: 6px 0 14px; }
+.face-hub .article-card { min-height: 210px; }
+
+@media (max-width: 620px) {
+  .article-side .toc, .article-side .side-card.dark { display: none; }
+}
+
+@media (max-width: 620px) {
+  .meta-grid.face-facts { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
+  .meta-grid.face-facts .meta-cell { padding: 10px 8px; }
+  .meta-grid.face-facts .v { font-size: 11px; }
+}
