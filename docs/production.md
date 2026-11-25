@@ -25,12 +25,13 @@
 
 | 变量 | 作用 | 不设置的后果 |
 |---|---|---|
-| `ADMIN_KEY` | 保护 `/admin.html` 与 `/api/stats` | 后台返回 404，无法看漏斗/留资 |
-| `DATA_DIR` | 事件与留资落盘目录（建议 `/var/data`） | 使用临时盘，重启/重部署会丢事件 |
+| `ADMIN_KEY` | 保护 `/admin.html` 与 `/api/stats` | 后台返回 404，无法看漏斗/留资；**已于 2026-11-25 配置** |
+| `DATABASE_URL` | Postgres（Neon）持久化事件与留资 | 回退到临时盘 `data/*.ndjson`，重启/重部署会丢数据；**已配置** |
+| `DATA_DIR` | 可选，事件与留资落盘目录（建议 `/var/data`） | 仅在无 `DATABASE_URL` 时使用 |
 | `LEADS_WEBHOOK_URL` | 可选，把留资推到飞书/Slack | 只能后台查看 |
 | `LOG_REQUESTS` | 可选，设为 `1` 打请求日志 | 默认关闭 |
 
-数据文件是 `data/events.ndjson` 与 `data/leads.ndjson`，已被 `.gitignore` 排除。Render 免费实例没有持久磁盘；要保留归因数据，需要挂载磁盘并把 `DATA_DIR` 指过去，或后续接 Postgres/Umami。
+生产优先写 Postgres（`glow_events` / `glow_leads`），通过 Neon SQL-over-HTTP，不增加运行时依赖；`DATABASE_URL` 不可用时回退 `data/*.ndjson`。`data/` 已被 `.gitignore` 排除。Render 免费实例没有持久磁盘，所以 **不要依赖本地文件做生产归因**。
 
 ## 支付状态
 

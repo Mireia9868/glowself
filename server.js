@@ -13,6 +13,8 @@ const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, 'data');
 const EVENTS_FILE = path.join(DATA_DIR, 'events.ndjson');
 const LEADS_FILE = path.join(DATA_DIR, 'leads.ndjson');
 const LEADS_WEBHOOK = process.env.LEADS_WEBHOOK_URL || '';
+const DATABASE_URL = process.env.DATABASE_URL || '';
+const DB_ENABLED = !!DATABASE_URL;
 
 const SEASONS = require('./data/seasons.json');
 
@@ -166,6 +168,152 @@ async function readJsonl(file) {
   }
 }
 
+
+// ===== optional Postgres persistence (Neon HTTP, no extra dependency) =====
+let dbReady = false;
+
+async function dbQuery(query, params = [], timeoutMs = 5000) {
+  if (!DB_ENABLED) throw new Error('db_disabled');
+  const url = new URL(DATABASE_URL);
+  const res = await fetch(`https://${url.host}/sql`, {
+    method: 'POST',
+    headers: {
+      'Neon-Connection-String': DATABASE_URL,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query, params }),
+    signal: AbortSignal.timeout(timeoutMs)
+  });
+  if (!res.ok) throw new Error('db_http_' + res.status);
+  const data = await res.json();
+  return Array.isArray(data.rows) ? data.rows : [];
+}
+
+async function dbInit() {
+  if (!DB_ENABLED) return;
+  const statements = [
+    `CREATE TABLE IF NOT EXISTS glow_events (
+      id BIGSERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      name TEXT NOT NULL,
+      session_id TEXT,
+      props JSONB,
+      path TEXT,
+      referrer TEXT
+    )`,
+    `CREATE INDEX IF NOT EXISTS glow_events_created_idx ON glow_events (created_at)`,
+    `CREATE TABLE IF NOT EXISTS glow_leads (
+      id BIGSERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      intent TEXT,
+      email TEXT,
+      source TEXT,
+      message TEXT,
+      uid TEXT,
+      ref TEXT,
+      campaign JSONB,
+      result JSONB
+    )`,
+    `CREATE INDEX IF NOT EXISTS glow_leads_created_idx ON glow_leads (created_at)`
+  ];
+  for (const sql of statements) await dbQuery(sql, [], 10000);
+  dbReady = true;
+  console.log('db: postgres ready');
+}
+
+async function dbInsertEvent(record) {
+  if (!DB_ENABLED) return;
+  await dbQuery(
+    `INSERT INTO glow_events (name, session_id, props, path, referrer)
+     VALUES ($1, $2, $3::jsonb, $4, $5)`,
+    [record.name, record.sessionId || null, JSON.stringify(record.props || {}), record.path || null, record.referrer || null]
+  );
+}
+
+async function dbInsertLead(record) {
+  if (!DB_ENABLED) return;
+  await dbQuery(
+    `INSERT INTO glow_leads (intent, email, source, message, uid, ref, campaign, result)
+     VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb)`,
+    [record.intent, record.email || '', record.source || '', record.message || '', record.uid || '', record.ref || '', JSON.stringify(record.campaign || null), JSON.stringify(record.result || null)]
+  );
+}
+
+function dbDaysAgo(days) {
+  return `now() - ($1::int * interval '1 day')`;
+}
+
+async function dbStats(days) {
+  const range = [days];
+  const [byNameRows, sessionRows, dayRows, seasonRows, styleRows, refRows, referrerRows, campaignRows, intentRows, leadRows] = await Promise.all([
+    dbQuery(`SELECT name, count(*)::int AS c FROM glow_events WHERE created_at >= ${dbDaysAgo()} GROUP BY name`, range),
+    dbQuery(`SELECT count(distinct session_id)::int AS c FROM glow_events WHERE created_at >= ${dbDaysAgo()}`, range),
+    dbQuery(`SELECT to_char(created_at AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD') AS d, count(*)::int AS c, count(distinct session_id)::int AS s FROM glow_events WHERE created_at >= ${dbDaysAgo()} GROUP BY 1`, range),
+    dbQuery(`SELECT props->>'seasonId' AS k, count(*)::int AS c FROM glow_events WHERE created_at >= ${dbDaysAgo()} AND props ? 'seasonId' GROUP BY 1`, range),
+    dbQuery(`SELECT props->>'styleId' AS k, count(*)::int AS c FROM glow_events WHERE created_at >= ${dbDaysAgo()} AND props ? 'styleId' GROUP BY 1`, range),
+    dbQuery(`SELECT props->>'ref' AS k, count(*)::int AS c FROM glow_events WHERE created_at >= ${dbDaysAgo()} AND props ? 'ref' GROUP BY 1`, range),
+    dbQuery(`SELECT referrer, count(*)::int AS c FROM glow_events WHERE created_at >= ${dbDaysAgo()} AND referrer <> '' GROUP BY referrer`, range),
+    dbQuery(`SELECT coalesce(nullif(props->'campaign'->>'source',''),'未知来源') || CASE WHEN props->'campaign'->>'campaign' IS NOT NULL THEN ' / ' || (props->'campaign'->>'campaign') ELSE '' END AS label, count(*)::int AS c FROM glow_events WHERE created_at >= ${dbDaysAgo()} AND props ? 'campaign' GROUP BY 1`, range),
+    dbQuery(`SELECT intent, count(*)::int AS c FROM glow_leads WHERE created_at >= ${dbDaysAgo()} GROUP BY intent`, range),
+    dbQuery(`SELECT created_at, email, intent, source, result->>'seasonId' AS season_id FROM glow_leads WHERE created_at >= ${dbDaysAgo()} ORDER BY created_at DESC LIMIT 30`, range)
+  ]);
+
+  const byName = Object.fromEntries(byNameRows.map(r => [r.name, r.c]));
+  const byIntent = Object.fromEntries(intentRows.map(r => [r.intent || '—', r.c]));
+  const seasonCounts = seasonRows.filter(r => r.k).map(r => [r.k, r.c]);
+  const styleCounts = styleRows.filter(r => r.k).map(r => [r.k, r.c]);
+  const campaigns = Object.fromEntries(campaignRows.filter(r => r.label).map(r => [r.label, r.c]));
+  const referrers = {};
+  refRows.filter(r => r.k).forEach(r => { referrers['ref:' + r.k] = r.c; });
+  referrerRows.forEach(r => {
+    try {
+      const host = new URL(r.referrer).hostname.replace(/^www\./, '');
+      if (host && host !== 'glowself.cn' && host !== 'localhost') referrers[host] = (referrers[host] || 0) + r.c;
+    } catch (_) {}
+  });
+
+  const start = new Date();
+  start.setUTCHours(0, 0, 0, 0);
+  start.setUTCDate(start.getUTCDate() - (days - 1));
+  const dayMap = Object.fromEntries(dayRows.map(r => [r.d, r]));
+  const byDay = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(start.getTime() + i * 86400_000).toISOString().slice(0, 10);
+    byDay.push({ date: d, events: dayMap[d]?.c || 0, sessions: dayMap[d]?.s || 0 });
+  }
+
+  const maskEmail = (value) => {
+    const email = String(value || '');
+    const at = email.indexOf('@');
+    if (at < 1) return '—';
+    return email.slice(0, 1) + '***' + email.slice(at);
+  };
+  const recentLeads = leadRows.map(l => ({
+    ts: new Date(l.created_at).toISOString(),
+    email: maskEmail(l.email),
+    intent: l.intent || '—',
+    source: l.source || '—',
+    seasonId: l.season_id || '—'
+  }));
+
+  return {
+    ok: true,
+    days,
+    storage: 'postgres',
+    events: Object.values(byName).reduce((a, b) => a + b, 0),
+    sessions: sessionRows[0]?.c || 0,
+    byName,
+    leads: Object.values(byIntent).reduce((a, b) => a + b, 0),
+    byIntent,
+    byDay,
+    topSeasons: seasonCounts.sort((a, b) => b[1] - a[1]).slice(0, 8),
+    topStyles: styleCounts.sort((a, b) => b[1] - a[1]).slice(0, 8),
+    topReferrers: Object.entries(referrers).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    topCampaigns: Object.entries(campaigns).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    recentLeads
+  };
+}
+
 async function handleEvent(req, res) {
   if (!rateLimit(clientIp(req), 180, 60_000)) return sendJson(res, 429, { ok: false, error: 'rate_limited' });
   const body = await readBody(req, 8192);
@@ -183,6 +331,9 @@ async function handleEvent(req, res) {
     ua: cleanString(req.headers['user-agent'], 200)
   };
   await appendJsonl(EVENTS_FILE, record);
+  if (DB_ENABLED) {
+    try { await dbInsertEvent(record); } catch (err) { console.error('[db] event', err.message); }
+  }
   sendJson(res, 200, { ok: true });
 }
 
@@ -215,6 +366,9 @@ async function handleLead(req, res) {
     ua: cleanString(req.headers['user-agent'], 200)
   };
   await appendJsonl(LEADS_FILE, record);
+  if (DB_ENABLED) {
+    try { await dbInsertLead(record); } catch (err) { console.error('[db] lead', err.message); }
+  }
 
   if (LEADS_WEBHOOK) {
     fetch(LEADS_WEBHOOK, {
@@ -230,6 +384,10 @@ async function handleStats(req, res, url) {
   const key = req.headers['x-admin-key'] || url.searchParams.get('key') || '';
   if (!ADMIN_KEY || key !== ADMIN_KEY) return sendJson(res, 404, { ok: false });
   const days = Math.min(90, Math.max(1, Number(url.searchParams.get('days') || 7)));
+  if (DB_ENABLED) {
+    try { return sendJson(res, 200, await dbStats(days)); }
+    catch (err) { console.error('[db] stats', err.message); }
+  }
   const since = Date.now() - days * 86400_000;
   const events = (await readJsonl(EVENTS_FILE)).filter(e => Date.parse(e.ts) >= since);
   const leads = (await readJsonl(LEADS_FILE)).filter(e => Date.parse(e.ts) >= since);
@@ -437,8 +595,11 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+dbInit().catch(err => console.error('[db] init', err.message));
+
 server.listen(PORT, () => {
   console.log(`GlowSelf server on http://127.0.0.1:${PORT}`);
+  console.log(`storage: ${DB_ENABLED ? 'postgres' : 'ndjson'}`);
 });
 
 module.exports = server;

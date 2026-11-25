@@ -79,7 +79,7 @@
         <p class="admin-empty" id="leads-empty" hidden>这个时间段还没有留资。</p>
       </section>
 
-      <p class="admin-foot">数据来自 <code>data/events.ndjson</code> 与 <code>data/leads.ndjson</code>。上线后建议接入 Umami 或 Plausible 做长期看板。</p>
+      <p class="admin-foot">数据写入 Postgres；未配置 <code>DATABASE_URL</code> 时回退到 <code>data/*.ndjson</code>。上线后建议再接 Umami 或 Plausible 做长期看板。</p>
     </section>
   </main>
   <script src="/assets/js/data.js"></script>

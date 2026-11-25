@@ -101,3 +101,10 @@ jq -r 'select(.name=="share_link_copy" or .name=="share_card_download") | .sessi
 - IP 仅用于反作弊与地域统计，24 个月后删除；
 - 用户可发邮件到 `hello@glowself.cn` 要求删除数据；
 - 事件不含姓名、手机号；邮箱只在主动提交时收集。
+
+
+## 生产存储与后台
+
+- `ADMIN_KEY` 保护 `/admin.html` 与 `/api/stats`。
+- 配置 `DATABASE_URL` 时，事件写入 `glow_events`、留资写入 `glow_leads`，后台聚合读 Postgres；否则回退 `data/*.ndjson`。
+- 生产归因以 `topCampaigns`（首次触点 UTM）为准；链接规范见 `growth/content/README.md`。
